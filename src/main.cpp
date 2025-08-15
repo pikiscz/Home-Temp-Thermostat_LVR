@@ -1,6 +1,7 @@
 #include "OledDisplayClass.h"
 #include "Sht40Class.h"
 #include "MqttClass.h"
+#include "UIClass.h"
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -29,13 +30,7 @@ Load WiFi SSID & Pass and MQTT IP Address:
 #define I2C_SCL 22
 #define I2C_ADDRESS_DISPLAY 0x3C
 #define I2C_ADDRESS_SHT40 0x45
-
 #define FLIP_SCREEN false
-#define FONT_10 ArialMT_Plain_10
-#define FONT_24 ArialMT_Plain_24
-#define TEXT_LEFT TEXT_ALIGN_LEFT
-#define TEXT_CENTER TEXT_ALIGN_CENTER
-#define TEXT_RIGHT TEXT_ALIGN_RIGHT
 
 unsigned long mqttLastEvent;
 unsigned long mqttInterval = 60000; //ms
@@ -43,11 +38,28 @@ unsigned long reconnectLastEvent;
 unsigned long reconnectInterval = 5000; //ms
 unsigned long mqttToPublishDelay = 1000; //ms
 
+/*
+0 = Outside
+1 = Living Room
+2 = Work Room
+3 = Bed Room
+4 = Bath Room
+*/
+String roomNames[] = {
+  "Venkovni",
+  "Obyvak",
+  "Pracovna",
+  "Loznice",
+  "Koupelna"
+};
+
 Preferences preferences;
 
 OledDisplayClass display(I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
 
 Sht40Class sht40(I2C_ADDRESS_SHT40);
+
+UIClass ui(&display, roomNames);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer);
@@ -166,6 +178,9 @@ void setup()
   display.string(50, 40, String(sht40.getHumidity()) + "%rH");
   display.string(90, 40, String(float(sht40.getTemperatureInt() / 10), 1) + "°C");
   display.display();
+
+  delay(1000);
+  ui.testPage(16, 1, true, true, true, 1, sht40.getTemperature(), 21.5, sht40.getHumidity());
   
 }
 

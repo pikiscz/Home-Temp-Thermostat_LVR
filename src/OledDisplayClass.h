@@ -5,10 +5,16 @@
 #include <Wire.h>
 #include <SH1106Wire.h>
 
-class OledDisplayClass
+
+#define FONT_10 ArialMT_Plain_10
+#define FONT_24 ArialMT_Plain_24
+#define TEXT_LEFT TEXT_ALIGN_LEFT
+#define TEXT_CENTER TEXT_ALIGN_CENTER
+#define TEXT_RIGHT TEXT_ALIGN_RIGHT
+
+class OledDisplayClass //: public SH1106Wire
 {
 private:
-    #define FONT_DEFAULT ArialMT_Plain_10
     SH1106Wire _display;
     bool _flipScreen;
 public:
@@ -19,6 +25,7 @@ public:
     inline void display() { _display.display(); }
     inline void clear() { _display.clear(); }
 
+    inline void pixel(int x, int y) { _display.setPixel(x, y); }
     void string(int x, int y, String str);
     void string(int x, int y, String str, const u_int8_t* font);
     void string(int x, int y, String str, OLEDDISPLAY_TEXT_ALIGNMENT alignment);
