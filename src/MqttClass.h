@@ -11,6 +11,9 @@ class MqttClass
 {
 private:
     const char* _mqttServer;
+    const String* _mqttTopicsIn;
+    const String* _mqttTopicsOut;
+
     WiFiClient _espClient;
     PubSubClient _client;
 

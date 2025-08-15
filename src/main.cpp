@@ -53,6 +53,28 @@ String roomNames[] = {
   "Koupelna"
 };
 
+String mqttTopicIn[] = {
+  "/home/temp/heating_mode_in",
+  "/home/temp/therm_LVR_in",
+  "/home/temp/therm_WKR_in",
+  "/home/temp/therm_BDR_in",
+  "/home/temp/therm_BHR_in",
+  "/home/temp/therm_OUT_in",
+  "/home/electro/switchboard_in"
+};
+String mqttTopicOut[] = {
+  "/home/temp/heating_mode_out",
+  "/home/temp/therm_LVR_out",
+  "/home/temp/therm_WKR_out",
+  "/home/temp/therm_BDR_out",
+  "/home/temp/therm_BHR_out",
+  "/home/temp/therm_OUT_out",
+  "/home/electro/switchboard_out",
+  "/home/time"
+};
+const int numberOfTopics = 8;
+
+
 Preferences preferences;
 
 OledDisplayClass display(I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
@@ -64,26 +86,6 @@ UIClass ui(&display, roomNames);
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer);
 
-const String mqttTopicIn[] = {
-  "/home/temp/heating_mode_in",
-  "/home/temp/therm_LVR_in",
-  "/home/temp/therm_WKR_in",
-  "/home/temp/therm_BDR_in",
-  "/home/temp/therm_BHR_in",
-  "/home/temp/therm_OUT_in",
-  "/home/electro/switchboard_in"
-};
-const String mqttTopicOut[] = {
-  "/home/temp/heating_mode_out",
-  "/home/temp/therm_LVR_out",
-  "/home/temp/therm_WKR_out",
-  "/home/temp/therm_BDR_out",
-  "/home/temp/therm_BHR_out",
-  "/home/temp/therm_OUT_out",
-  "/home/electro/switchboard_out",
-  "/home/time"
-};
-const int numberOfTopics = 8;
 
 
 /*============================================================================
@@ -176,7 +178,7 @@ void setup()
 
   sht40.getData();
   display.string(50, 40, String(sht40.getHumidity()) + "%rH");
-  display.string(90, 40, String(float(sht40.getTemperatureInt() / 10), 1) + "°C");
+  display.string(90, 40, String(float(sht40.getTemperature()), 1) + "°C");
   display.display();
 
   delay(1000);

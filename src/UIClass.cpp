@@ -5,6 +5,7 @@ UIClass::UIClass(OledDisplayClass* display, String roomNames[])
     _display = display;
 
     int getArrayLenght = sizeof(roomNames) / sizeof(roomNames[0]);
+
     _roomNames = new const String[getArrayLenght];
     _roomNames = roomNames;
 }
@@ -80,7 +81,7 @@ void UIClass::DisplayHumidity(int humidity)
     _display->string(125, 47, String(humidity) + "%rH", TEXT_RIGHT);
 }
 
-void UIClass::testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, int mainTemp, int secTemp, int humidity)
+void UIClass::testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, float mainTemp, float secTemp, int humidity)
 {
     _display->clear();
     DisplayActTime(timeHH, timeMM);

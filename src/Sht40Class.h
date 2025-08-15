@@ -27,7 +27,7 @@ public:
     void getData();
     inline int getHumidity() { return _humidityInt; }
     inline int getTemperatureInt() { return _temperatureInt; }
-    inline float getTemperature() { return (float)_temperatureInt / 10; }
+    inline float getTemperature() { return float(_temperatureInt) / 10; }
 };
 
 #endif

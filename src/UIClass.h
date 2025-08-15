@@ -34,7 +34,7 @@ public:
     UIClass(OledDisplayClass* display, String roomNames[]);
     ~UIClass();
     
-    void testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, int mainTemp, int secTemp, int humidity);
+    void testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, float mainTemp, float secTemp, int humidity);
 };
 
 #endif
