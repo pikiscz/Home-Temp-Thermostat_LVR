@@ -5,3 +5,6 @@
 .vscode/ipch
 src/networkCredentials.h
 test/README
+lib/README
+include/README
+.vscode/extensions.json
