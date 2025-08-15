@@ -18,7 +18,7 @@ private:
     PubSubClient _client;
 
 public:
-    MqttClass(const char* mqttServer);
+    MqttClass(const char* mqttServer, String mqttTopicsIn[], String mqttTopicsOut[]);
     ~MqttClass();
     void init(std::function<void(char*, uint8_t*, unsigned int)> mqttCallback);
 };

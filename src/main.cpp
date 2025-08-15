@@ -84,7 +84,7 @@ Sht40Class sht40(I2C_ADDRESS_SHT40);
 UIClass ui(&display, roomNames);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
-MqttClass mqtt(mqttServer);
+MqttClass mqtt(mqttServer, mqttTopicIn, mqttTopicOut);
 
 
 

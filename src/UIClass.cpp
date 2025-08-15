@@ -4,9 +4,9 @@ UIClass::UIClass(OledDisplayClass* display, String roomNames[])
 {
     _display = display;
 
-    int getArrayLenght = sizeof(roomNames) / sizeof(roomNames[0]);
+    int arraySize = sizeof(roomNames) / sizeof(roomNames[0]);
 
-    _roomNames = new const String[getArrayLenght];
+    _roomNames = new const String[arraySize];
     _roomNames = roomNames;
 }
 
