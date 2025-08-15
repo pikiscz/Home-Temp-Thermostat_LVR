@@ -151,6 +151,7 @@ void setup()
   display.display();
  
   mqtt.init(MqttCallback);
+  mqtt.subscribe();
 
   #ifdef DEBUG_MODE
   Serial.println("SHT40 test");
@@ -182,7 +183,7 @@ void setup()
   display.display();
 
   delay(1000);
-  ui.testPage(16, 1, true, true, true, 1, sht40.getTemperature(), 21.5, sht40.getHumidity());
+  ui.testPage(16, 1, mqtt.getConnectionStatus(), true, true, 1, sht40.getTemperature(), 21.5, sht40.getHumidity());
   
 }
 
