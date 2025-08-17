@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "OledDisplayClass.h"
+#include "Sht40Class.h"
+#include "MqttClass.h"
 
 
 class UIClass
@@ -18,7 +20,15 @@ private:
     uint8_t _iconDisabledY[30] = {0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7};
 
     const String* _roomNames;
+    int _countOfRooms;
+
     OledDisplayClass* _display;
+    Sht40Class* _sht40;
+    MqttClass* _mqtt;
+
+    unsigned long _lastRefresh;
+    unsigned long _refreshInterval;
+
 
     void DisplayActTime(int timeHH, int timeMM);
     inline String TimeFormater(int time) { return time<10 ? "0" + String(time) : String(time); };
@@ -31,10 +41,12 @@ private:
     void DisplayHumidity(int humidity);
 
 public:
-    UIClass(OledDisplayClass* display, String roomNames[]);
+    UIClass(OledDisplayClass* display, Sht40Class* sht40, MqttClass* mqtt, String roomNames[]);
     ~UIClass();
     
-    void testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, float mainTemp, float secTemp, int humidity);
+    inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
+    void refresh(unsigned long now);
+    void testPage();
 };
 
 #endif

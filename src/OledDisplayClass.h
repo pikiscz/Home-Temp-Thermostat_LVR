@@ -17,11 +17,23 @@ class OledDisplayClass //: public SH1106Wire
 private:
     SH1106Wire _display;
     bool _flipScreen;
+    bool _displayIsOn;
+    unsigned long _displayOnTimer;
+    unsigned long _sleepTimeOut;
+
 public:
     OledDisplayClass(u_int8_t adr, int sda, int scl, bool flipScreen);
     ~OledDisplayClass();
 
+    void init(unsigned long sleepTimeOut);
     void init();
+
+    inline void setDisplayOn() { _display.displayOn(); _displayIsOn = true; }
+    inline void setDisplayOff() { _display.displayOff(); _displayIsOn = false; }
+    inline bool getDisplayOn() { return _displayIsOn; }
+    inline void setSleepTimeOut(unsigned long sleepTimeOut) { _sleepTimeOut = sleepTimeOut; }
+    void sleepTimer(unsigned long now);
+
     inline void display() { _display.display(); }
     inline void clear() { _display.clear(); }
 

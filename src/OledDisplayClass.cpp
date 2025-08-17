@@ -10,7 +10,7 @@ OledDisplayClass::~OledDisplayClass()
 
 }
 
-void OledDisplayClass::init()
+void OledDisplayClass::init(unsigned long sleepTimeOut)
 {
     _display.init();
     if(_flipScreen)
@@ -19,6 +19,25 @@ void OledDisplayClass::init()
     }
     _display.clear();
     _display.display();
+    _displayIsOn = true;
+    _sleepTimeOut = sleepTimeOut;
+    _displayOnTimer = millis();
+}
+
+void OledDisplayClass::init()
+{
+    init(0);
+}
+
+void OledDisplayClass::sleepTimer(unsigned long now)
+{
+    if(_displayIsOn && _sleepTimeOut > 0)
+    {
+        if(now - _displayOnTimer > _sleepTimeOut)
+        {
+            setDisplayOff();
+        }
+    }
 }
 
 void OledDisplayClass::string(int x, int y, String str)

@@ -13,15 +13,17 @@ private:
     const char* _mqttServer;
     const String* _mqttTopicsIn;
     const String* _mqttTopicsOut;
-    int _numberOfTopicsIn;
-    int _numberOfTopicsOut;
+    int _countOfTopicsIn;
+    int _countOfTopicsOut;
 
-    bool _mqttConnected = false;
+    bool _connected = false;
+    unsigned long _reconnectLastEvent;
+    unsigned long _reconnectInterval = 5000;;
 
     WiFiClient _espClient;
     PubSubClient _client;
 
-    void SerializeDoc(StaticJsonDocument<100> doc, int topic);
+    void SerializeDoc(JsonDocument doc, int topic);
 
 public:
     MqttClass(const char* mqttServer, String mqttTopicsIn[], String mqttTopicsOut[]);
@@ -29,11 +31,12 @@ public:
     void init(std::function<void(char*, uint8_t*, unsigned int)> mqttCallback);
     void subscribe();
     void reconnect();
+    void loop(unsigned long now);
     void publish(char* key1, float value1, int topic);
     void publish(char* key1, float value1, char* key2, float value2, int topic);
     void publish(char* key1, float value1, char* key2, float value2, char* key3, float value3, int topic);
     void publish(char* key1, float value1, char* key2, float value2, char* key3, float value3, char* key4, float value4, int topic);
-    inline bool getConnectionStatus() { return _mqttConnected; }
+    inline bool getConnected() { return _connected; }
 };
 
 #endif

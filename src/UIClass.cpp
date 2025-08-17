@@ -1,12 +1,14 @@
 #include "UIClass.h"
 
-UIClass::UIClass(OledDisplayClass* display, String roomNames[])
+UIClass::UIClass(OledDisplayClass* display, Sht40Class* sht40, MqttClass* mqtt, String roomNames[])
 {
     _display = display;
+    _sht40 = sht40;
+    _mqtt = mqtt;
 
-    int arraySize = sizeof(roomNames) / sizeof(roomNames[0]);
+    _countOfRooms = sizeof(roomNames) / sizeof(roomNames[0]);
 
-    _roomNames = new const String[arraySize];
+    _roomNames = new const String[_countOfRooms];
     _roomNames = roomNames;
 }
 
@@ -81,16 +83,24 @@ void UIClass::DisplayHumidity(int humidity)
     _display->string(125, 47, String(humidity) + "%rH", TEXT_RIGHT);
 }
 
-void UIClass::testPage(int timeHH, int timeMM, bool online, bool heating, int relay, int roomNumber, float mainTemp, float secTemp, int humidity)
+void UIClass::refresh(unsigned long now) {
+    if(now - _lastRefresh > _refreshInterval)
+    {
+        _lastRefresh = now;
+        testPage();
+    }
+}
+
+void UIClass::testPage()
 {
     _display->clear();
-    DisplayActTime(timeHH, timeMM);
-    DisplayConnectionStatus(online);
-    DisplayHeatingDisabled(heating);
-    DisplayRelayState(relay);
-    DisplayRoomName(roomNumber);
-    DisplayMainTemperature(mainTemp);
-    DisplaySecondaryTemperature(secTemp);
-    DisplayHumidity(humidity);
+    DisplayActTime(13, 1);
+    DisplayConnectionStatus(_mqtt->getConnected());
+    DisplayHeatingDisabled(true);
+    DisplayRelayState(true);
+    DisplayRoomName(1);
+    DisplayMainTemperature(_sht40->getTemperature());
+    DisplaySecondaryTemperature(21.5);
+    DisplayHumidity(_sht40->getHumidity());
     _display->display();
 }

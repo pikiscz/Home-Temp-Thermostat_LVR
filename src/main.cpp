@@ -1,6 +1,7 @@
 #include "OledDisplayClass.h"
 #include "Sht40Class.h"
 #include "MqttClass.h"
+#include "TempControlClass.h"
 #include "UIClass.h"
 
 #include <Arduino.h>
@@ -32,11 +33,20 @@ Load WiFi SSID & Pass and MQTT IP Address:
 #define I2C_ADDRESS_SHT40 0x45
 #define FLIP_SCREEN false
 
+#define BUTTON1_PIN 25  //Button Minus
+#define BUTTON2_PIN 26  //Button Plus
+#define BUTTON3_PIN 27  //Button Enter
+
 unsigned long mqttLastEvent;
 unsigned long mqttInterval = 60000; //ms
-unsigned long reconnectLastEvent;
 unsigned long reconnectInterval = 5000; //ms
 unsigned long mqttToPublishDelay = 1000; //ms
+
+unsigned long displaySleepTimeOut = 60000; //ms
+unsigned long uiRefreshIneterval = 100; //ms
+
+float tempSetMin = 15;
+float tempSetMax = 25;
 
 /*
 0 = Outside
@@ -81,11 +91,12 @@ OledDisplayClass display(I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
 
 Sht40Class sht40(I2C_ADDRESS_SHT40);
 
-UIClass ui(&display, roomNames);
+TempControlClass tempControl(&sht40);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer, mqttTopicIn, mqttTopicOut);
 
+UIClass ui(&display, &sht40, &mqtt,roomNames);
 
 
 /*============================================================================
@@ -103,7 +114,9 @@ void setup()
   Serial.println();
   #endif
 
-  display.init();
+  //--------------------------------------------------------------------------
+  // OLED Display Init
+  display.init(displaySleepTimeOut);
   display.string(0, 0, "Living Room");
 
   //--------------------------------------------------------------------------
@@ -118,7 +131,6 @@ void setup()
   */
   preferences.end();
 
-  
   //--------------------------------------------------------------------------
   // WiFi Init
   #ifdef DEBUG_MODE
@@ -150,9 +162,13 @@ void setup()
   display.string(0, 20, strIP);
   display.display();
  
+  //--------------------------------------------------------------------------
+  // MQTT Server Init
   mqtt.init(MqttCallback);
   mqtt.subscribe();
 
+  //--------------------------------------------------------------------------
+  // Sensor SHT40
   #ifdef DEBUG_MODE
   Serial.println("SHT40 test");
   #endif
@@ -183,13 +199,25 @@ void setup()
   display.display();
 
   delay(1000);
-  ui.testPage(16, 1, mqtt.getConnectionStatus(), true, true, 1, sht40.getTemperature(), 21.5, sht40.getHumidity());
   
+  
+  ui.setRefreshInterval(uiRefreshIneterval);
+  
+
+  mqttLastEvent = millis() - mqttInterval + 3000; //3 seconds to call mqtt publish
 }
 
 void loop()
 {
+  unsigned long now = millis();
+
+  display.sleepTimer(now);
+
+  mqtt.loop(now);
+
+  ui.refresh(now);
   
+
 }
 
 void MqttCallback(char* topic, byte* message, unsigned long length)
