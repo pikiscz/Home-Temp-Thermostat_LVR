@@ -56,30 +56,30 @@ float tempSetMax = 25;
 4 = Bath Room
 */
 String roomNames[] = {
-  "Venkovni",
   "Obyvak",
   "Pracovna",
   "Loznice",
-  "Koupelna"
+  "Koupelna",
+  "Venkovni"
 };
-int defaultRoom = 1;
+int defaultRoom = 0;
 
 String mqttTopicIn[] = {
-  "/home/temp/heating_mode_in",
   "/home/temp/therm_LVR_in",
   "/home/temp/therm_WKR_in",
   "/home/temp/therm_BDR_in",
   "/home/temp/therm_BHR_in",
   "/home/temp/therm_OUT_in",
+  "/home/temp/heating_mode_in",
   "/home/electro/switchboard_in"
 };
 String mqttTopicOut[] = {
-  "/home/temp/heating_mode_out",
   "/home/temp/therm_LVR_out",
   "/home/temp/therm_WKR_out",
   "/home/temp/therm_BDR_out",
   "/home/temp/therm_BHR_out",
   "/home/temp/therm_OUT_out",
+  "/home/temp/heating_mode_out",
   "/home/electro/switchboard_out",
   "/home/time"
 };
