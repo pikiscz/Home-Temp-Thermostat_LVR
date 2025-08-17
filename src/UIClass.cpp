@@ -1,6 +1,12 @@
 #include "UIClass.h"
 
-UIClass::UIClass(OledDisplayClass* display, Sht40Class* sht40, MqttClass* mqtt, String roomNames[])
+UIClass::UIClass(
+    OledDisplayClass* display,
+    Sht40Class* sht40,
+    MqttClass* mqtt,
+    String roomNames[],
+    int defaultRoom
+)
 {
     _display = display;
     _sht40 = sht40;
@@ -10,6 +16,8 @@ UIClass::UIClass(OledDisplayClass* display, Sht40Class* sht40, MqttClass* mqtt, 
 
     _roomNames = new const String[_countOfRooms];
     _roomNames = roomNames;
+    _defaultRoom = defaultRoom;
+    _actualRoom = defaultRoom;
 }
 
 UIClass::~UIClass()

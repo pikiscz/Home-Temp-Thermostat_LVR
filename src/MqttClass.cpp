@@ -45,7 +45,7 @@ void MqttClass::reconnect()
         {
             subscribe();
             _connected = true;
-            publish("connected", true, 1);
+            publish("connected" , true, 1);
         }
         else
         {
@@ -66,14 +66,14 @@ void MqttClass::loop(unsigned long now)
     }
 }
 
-void MqttClass::publish(char* key1, float value1, int topic)
+void MqttClass::publish(String key1, float value1, int topic)
 {
     JsonDocument doc;
     doc[key1] = value1;
     SerializeDoc(doc, topic);
 }
 
-void MqttClass::publish(char* key1, float value1, char* key2, float value2, int topic)
+void MqttClass::publish(String key1, float value1, String key2, float value2, int topic)
 {
     JsonDocument doc;
     doc[key1] = value1;
@@ -81,7 +81,7 @@ void MqttClass::publish(char* key1, float value1, char* key2, float value2, int 
     SerializeDoc(doc, topic);
 }
 
-void MqttClass::publish(char* key1, float value1, char* key2, float value2, char* key3, float value3, int topic)
+void MqttClass::publish(String key1, float value1, String key2, float value2, String key3, float value3, int topic)
 {
     JsonDocument doc;
     doc[key1] = value1;
@@ -90,7 +90,7 @@ void MqttClass::publish(char* key1, float value1, char* key2, float value2, char
     SerializeDoc(doc, topic);
 }
 
-void MqttClass::publish(char* key1, float value1, char* key2, float value2, char* key3, float value3, char* key4, float value4, int topic)
+void MqttClass::publish(String key1, float value1, String key2, float value2, String key3, float value3, String key4, float value4, int topic)
 {
     JsonDocument doc;
     doc[key1] = value1;

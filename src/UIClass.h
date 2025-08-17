@@ -21,6 +21,8 @@ private:
 
     const String* _roomNames;
     int _countOfRooms;
+    int _defaultRoom;
+    int _actualRoom;
 
     OledDisplayClass* _display;
     Sht40Class* _sht40;
@@ -41,7 +43,13 @@ private:
     void DisplayHumidity(int humidity);
 
 public:
-    UIClass(OledDisplayClass* display, Sht40Class* sht40, MqttClass* mqtt, String roomNames[]);
+    UIClass(
+        OledDisplayClass* display,
+        Sht40Class* sht40,
+        MqttClass* mqtt,
+        String roomNames[],
+        int defaultRoom
+    );
     ~UIClass();
     
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }

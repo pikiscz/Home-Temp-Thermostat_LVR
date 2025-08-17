@@ -62,6 +62,7 @@ String roomNames[] = {
   "Loznice",
   "Koupelna"
 };
+int defaultRoom = 1;
 
 String mqttTopicIn[] = {
   "/home/temp/heating_mode_in",
@@ -84,6 +85,37 @@ String mqttTopicOut[] = {
 };
 const int numberOfTopics = 8;
 
+String mqttHumidityKeys[] = {
+  "humidity_LVR",
+  "humidity_WKR",
+  "humidity_BDR",
+  "humidity_BHR",
+  "humidity_OUT"
+};
+String mqttTempActKeys[] = {
+  "temp_act_LVR",
+  "temp_act_WKR",
+  "temp_act_BDR",
+  "temp_act_BHR",
+  "temp_act_OUT"
+};
+String mqttTempSetKeys[] = {
+  "temp_set_LVR",
+  "temp_set_WKR",
+  "temp_set_BDR",
+  "temp_set_BHR"
+};
+String mqttRelayKeys[] = {
+  "relay_LVR",
+  "relay_BDR",
+  "relay_BHR",
+};
+float mqttHumidity[5];
+float mqttTempAct[5];
+float mqttTempSet[4];
+int mqttRelays[3];
+int mqttTime[2];
+int mqttSignalRC;
 
 Preferences preferences;
 
@@ -96,7 +128,7 @@ TempControlClass tempControl(&sht40);
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer, mqttTopicIn, mqttTopicOut);
 
-UIClass ui(&display, &sht40, &mqtt,roomNames);
+UIClass ui(&display, &sht40, &mqtt, roomNames, defaultRoom);
 
 
 /*============================================================================
@@ -251,4 +283,5 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
     #endif
     return;
   }
+
 }
