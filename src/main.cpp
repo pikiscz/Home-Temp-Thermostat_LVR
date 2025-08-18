@@ -49,11 +49,11 @@ float tempSetMin = 15;
 float tempSetMax = 25;
 
 /*
-0 = Outside
-1 = Living Room
-2 = Work Room
-3 = Bed Room
-4 = Bath Room
+0 = Living Room
+1 = Work Room
+2 = Bed Room
+3 = Bath Room
+4 = Outside
 */
 String roomNames[] = {
   "Obyvak",
@@ -62,9 +62,9 @@ String roomNames[] = {
   "Koupelna",
   "Venkovni"
 };
-int defaultRoom = 0;
+const int defaultRoom = 1;  // WORK ROOM
 
-String mqttTopicIn[] = {
+const char* mqttPublishTopics[] = {
   "/home/temp/therm_LVR_in",
   "/home/temp/therm_WKR_in",
   "/home/temp/therm_BDR_in",
@@ -73,48 +73,59 @@ String mqttTopicIn[] = {
   "/home/temp/heating_mode_in",
   "/home/electro/switchboard_in"
 };
-String mqttTopicOut[] = {
+const char* mqttSubscribeTopicsRooms[] = {
   "/home/temp/therm_LVR_out",
   "/home/temp/therm_WKR_out",
   "/home/temp/therm_BDR_out",
   "/home/temp/therm_BHR_out",
-  "/home/temp/therm_OUT_out",
+  "/home/temp/therm_OUT_out"
+};
+const char* mqttSubscribeTopicsOthers[] = {
   "/home/temp/heating_mode_out",
   "/home/electro/switchboard_out",
   "/home/time"
 };
-const int numberOfTopics = 8;
 
-String mqttHumidityKeys[] = {
+const char* mqttHumidityKeys[] = {
   "humidity_LVR",
   "humidity_WKR",
   "humidity_BDR",
   "humidity_BHR",
   "humidity_OUT"
 };
-String mqttTempActKeys[] = {
+const char* mqttTempActKeys[] = {
   "temp_act_LVR",
   "temp_act_WKR",
   "temp_act_BDR",
   "temp_act_BHR",
   "temp_act_OUT"
 };
-String mqttTempSetKeys[] = {
+const char* mqttTempSetKeys[] = {
   "temp_set_LVR",
   "temp_set_WKR",
   "temp_set_BDR",
-  "temp_set_BHR"
+  "temp_set_BHR",
+  "temp_set_OUT"
 };
-String mqttRelayKeys[] = {
+const char* mqttRelayKeys[] = {
   "relay_LVR",
+  "relay_WKR",
   "relay_BDR",
   "relay_BHR",
+  "rekat_OUT"
 };
+const char* mqttOtherKeys[] = {
+  "heating_enabled",
+  "signal_RC",
+  "hours",
+  "minutes"
+};
+
 float mqttHumidity[5];
 float mqttTempAct[5];
-float mqttTempSet[4];
-int mqttRelays[3];
-int mqttTime[2];
+float mqttTempSet[5];
+int mqttRelays[5];
+bool mqttHeatingEnabled;
 int mqttSignalRC;
 
 Preferences preferences;
@@ -126,7 +137,7 @@ Sht40Class sht40(I2C_ADDRESS_SHT40);
 TempControlClass tempControl(&sht40);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
-MqttClass mqtt(mqttServer, mqttTopicIn, mqttTopicOut);
+MqttClass mqtt(mqttServer, MqttCallback);
 
 UIClass ui(&display, &sht40, &mqtt, roomNames, defaultRoom);
 
@@ -196,7 +207,21 @@ void setup()
  
   //--------------------------------------------------------------------------
   // MQTT Server Init
-  mqtt.init(MqttCallback);
+  int subscribeCount1, subscribeCount2;
+  for(const char* topic : mqttSubscribeTopicsRooms)
+  {
+    subscribeCount1++;
+  }
+  for(const char* topic : mqttSubscribeTopicsOthers)
+  {
+    subscribeCount2++;
+  }
+  
+  mqtt.subscribeTopics(
+    mqttSubscribeTopicsRooms, subscribeCount1,
+    mqttSubscribeTopicsOthers, subscribeCount2,
+    false
+  );
   mqtt.subscribe();
 
   //--------------------------------------------------------------------------
@@ -235,7 +260,6 @@ void setup()
   
   ui.setRefreshInterval(uiRefreshIneterval);
   
-
   mqttLastEvent = millis() - mqttInterval + 3000; //3 seconds to call mqtt publish
 }
 
@@ -249,6 +273,17 @@ void loop()
 
   ui.refresh(now);
   
+  if(now - mqttLastEvent > mqttInterval)
+  {
+    mqttLastEvent = now;
+    mqtt.publish(
+      mqttPublishTopics[defaultRoom],
+      mqttTempSetKeys[defaultRoom], 20.5,
+      mqttTempActKeys[defaultRoom], sht40.getTemperature(),
+      mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
+      mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
+    );
+  }
 
 }
 
@@ -257,7 +292,6 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
   #ifdef DEBUG_MODE_MQTT
   Serial.print("Message arrived on topic: ");
   Serial.println(topic);
-  Serial.println("Message:");
   #endif
 
   String json;
@@ -284,4 +318,89 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
     return;
   }
 
+  int i;
+  for(const char* topicRooms : mqttSubscribeTopicsRooms)
+  {
+    if(strcmp(topic, mqttSubscribeTopicsRooms[i]) == 0)
+    {
+      if(i != defaultRoom)
+      {
+        if(doc[mqttHumidityKeys[i]].is<float>())
+        {
+          mqttHumidity[i] = doc[mqttHumidityKeys[i]];
+          #ifdef DEBUG_MODE_MQTT
+          String str = String(mqttHumidityKeys[i]) + " = " + mqttHumidity[i];
+          Serial.println(str);
+          #endif
+        }
+        
+        if(doc[mqttTempActKeys[i]].is<float>())
+        {
+          mqttTempAct[i] = doc[mqttTempActKeys[i]];
+          #ifdef DEBUG_MODE_MQTT
+          String str = String(mqttTempActKeys[i]) + " = " + mqttTempAct[i];
+          Serial.println(str);
+          #endif
+        }
+
+        if(doc[mqttRelayKeys[i]].is<int>())
+        {
+          mqttRelays[i] = doc[mqttRelayKeys[i]];
+          #ifdef DEBUG_MODE_MQTT
+          String str = String(mqttRelayKeys[i]) + " = " + mqttRelays[i];
+          Serial.println(str);
+          #endif
+        }
+      }
+
+      if(doc[mqttTempSetKeys[i]].is<float>())
+      {
+        mqttTempSet[i] = doc[mqttTempSetKeys[i]];
+        #ifdef DEBUG_MODE_MQTT
+        String str = String(mqttTempSetKeys[i]) + " = " + mqttTempSet[i];
+        Serial.println(str);
+        #endif
+      }
+    }
+    
+    i++;
+  }
+
+  if(strcmp(topic, mqttSubscribeTopicsOthers[0]) == 0)
+  {
+    if(doc[mqttOtherKeys[0]].is<bool>())
+    {
+      mqttHeatingEnabled = doc[mqttOtherKeys[0]];
+    }
+  }
+  
+  if(strcmp(topic, mqttSubscribeTopicsOthers[1]) == 0)
+  {
+    if(doc[mqttOtherKeys[1]].is<int>())
+    {
+      mqttSignalRC = doc[mqttOtherKeys[1]];
+    }
+  }
+  
+  if(strcmp(topic, mqttSubscribeTopicsOthers[2]) == 0)
+  {
+    int timeHH, timeMM;
+    if(doc[mqttOtherKeys[2]].is<int>())
+    {
+      timeHH = doc[mqttOtherKeys[2]];
+      #ifdef DEBUG_MODE_MQTT
+      String str = String(mqttOtherKeys[2]) + " = " + timeHH;
+      Serial.println(str);
+      #endif
+    }
+    if(doc[mqttOtherKeys[3]].is<int>())
+    {
+      timeMM = doc[mqttOtherKeys[3]];
+      #ifdef DEBUG_MODE_MQTT
+      String str = String(mqttOtherKeys[3]) + " = " + timeMM;
+      Serial.println(str);
+      #endif
+    }
+    ui.setActTime(timeHH, timeMM);
+  }
 }

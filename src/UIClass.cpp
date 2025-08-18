@@ -17,7 +17,7 @@ UIClass::UIClass(
     _roomNames = new const String[_countOfRooms];
     _roomNames = roomNames;
     _defaultRoom = defaultRoom;
-    _actualRoom = defaultRoom;
+    _currentRoom = defaultRoom;
 }
 
 UIClass::~UIClass()
@@ -102,7 +102,7 @@ void UIClass::refresh(unsigned long now) {
 void UIClass::testPage()
 {
     _display->clear();
-    DisplayActTime(13, 1);
+    DisplayActTime(_timeHH, _timeMM);
     DisplayConnectionStatus(_mqtt->getConnected());
     DisplayHeatingDisabled(true);
     DisplayRelayState(true);

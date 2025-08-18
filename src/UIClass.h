@@ -22,7 +22,10 @@ private:
     const String* _roomNames;
     int _countOfRooms;
     int _defaultRoom;
-    int _actualRoom;
+    int _currentRoom;
+
+    int _timeHH;
+    int _timeMM;
 
     OledDisplayClass* _display;
     Sht40Class* _sht40;
@@ -30,7 +33,6 @@ private:
 
     unsigned long _lastRefresh;
     unsigned long _refreshInterval;
-
 
     void DisplayActTime(int timeHH, int timeMM);
     inline String TimeFormater(int time) { return time<10 ? "0" + String(time) : String(time); };
@@ -52,6 +54,7 @@ public:
     );
     ~UIClass();
     
+    inline void setActTime(int timeHH, int timeMM) { _timeHH = timeHH; _timeMM = timeMM; }
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
     void refresh(unsigned long now);
     void testPage();
