@@ -5,10 +5,7 @@ OledDisplayClass::OledDisplayClass(u_int8_t adr, int sda, int scl, bool flipScre
     _flipScreen = flipScreen;
 }
 
-OledDisplayClass::~OledDisplayClass()
-{
-
-}
+OledDisplayClass::~OledDisplayClass() {}
 
 void OledDisplayClass::init(unsigned long sleepTimeOut)
 {

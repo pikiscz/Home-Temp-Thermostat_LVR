@@ -1,4 +1,5 @@
 #include "OledDisplayClass.h"
+#include "ButtonClass.h"
 #include "Sht40Class.h"
 #include "MqttClass.h"
 #include "TempControlClass.h"
@@ -9,7 +10,6 @@
 #include <ArduinoJson.hpp>
 #include <WiFi.h>
 #include <Preferences.h>
-#include <ezButton.h>
 
 using namespace std;
 
@@ -44,6 +44,9 @@ unsigned long mqttToPublishDelay = 1000; //ms
 
 unsigned long displaySleepTimeOut = 60000; //ms
 unsigned long uiRefreshIneterval = 100; //ms
+
+unsigned long buttonDebounceTime = 50; //ms
+unsigned long buttonLongPressTime = 2000; //ms
 
 float tempSetMin = 15;
 float tempSetMax = 25;
@@ -132,6 +135,16 @@ Preferences preferences;
 
 OledDisplayClass display(I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
 
+ButtonClass buttonMinus(
+  BUTTON1_PIN, INPUT_PULLUP, COUNT_RISING,
+  buttonDebounceTime, buttonLongPressTime);
+ButtonClass buttonPlus(
+  BUTTON2_PIN, INPUT_PULLUP, COUNT_RISING,
+  buttonDebounceTime, buttonLongPressTime);
+ButtonClass buttonEnter(
+  BUTTON3_PIN, INPUT_PULLUP, COUNT_RISING,
+  buttonDebounceTime, buttonLongPressTime);
+
 Sht40Class sht40(I2C_ADDRESS_SHT40);
 
 TempControlClass tempControl(&sht40);
@@ -139,7 +152,9 @@ TempControlClass tempControl(&sht40);
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer, MqttCallback);
 
-UIClass ui(&display, &sht40, &mqtt, roomNames, defaultRoom);
+UIClass ui(
+  &display, &buttonMinus, &buttonPlus, &buttonEnter, &sht40,
+  &mqtt, roomNames, defaultRoom);
 
 
 /*============================================================================
@@ -266,6 +281,10 @@ void setup()
 void loop()
 {
   unsigned long now = millis();
+
+  buttonMinus.loop(now);
+  buttonPlus.loop(now);
+  buttonEnter.loop(now);
 
   display.sleepTimer(now);
 

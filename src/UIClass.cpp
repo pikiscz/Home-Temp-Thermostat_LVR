@@ -2,6 +2,9 @@
 
 UIClass::UIClass(
     OledDisplayClass* display,
+    ButtonClass* buttonMinus,
+    ButtonClass* buttonPlus,
+    ButtonClass* buttonEnter,
     Sht40Class* sht40,
     MqttClass* mqtt,
     String roomNames[],
@@ -9,6 +12,9 @@ UIClass::UIClass(
 )
 {
     _display = display;
+    _buttonMinus = buttonMinus;
+    _buttonPlus = buttonPlus;
+    _buttonEnter = buttonEnter;
     _sht40 = sht40;
     _mqtt = mqtt;
 
@@ -20,10 +26,7 @@ UIClass::UIClass(
     _currentRoom = defaultRoom;
 }
 
-UIClass::~UIClass()
-{
-
-}
+UIClass::~UIClass() {}
 
 void UIClass::DisplayActTime(int timeHH, int timeMM)
 {
@@ -92,6 +95,8 @@ void UIClass::DisplayHumidity(int humidity)
 }
 
 void UIClass::refresh(unsigned long now) {
+    if(_buttonMinus->isPressed())
+        
     if(now - _lastRefresh > _refreshInterval)
     {
         _lastRefresh = now;

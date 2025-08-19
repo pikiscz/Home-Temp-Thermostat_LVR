@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "OledDisplayClass.h"
+#include "ButtonClass.h"
 #include "Sht40Class.h"
 #include "MqttClass.h"
 
@@ -28,6 +29,9 @@ private:
     int _timeMM;
 
     OledDisplayClass* _display;
+    ButtonClass* _buttonMinus;
+    ButtonClass* _buttonPlus;
+    ButtonClass* _buttonEnter;
     Sht40Class* _sht40;
     MqttClass* _mqtt;
 
@@ -47,6 +51,9 @@ private:
 public:
     UIClass(
         OledDisplayClass* display,
+        ButtonClass* buttonMinus,
+        ButtonClass* buttonPlus,
+        ButtonClass* buttonEnter,
         Sht40Class* sht40,
         MqttClass* mqtt,
         String roomNames[],

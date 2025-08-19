@@ -5,10 +5,7 @@ Sht40Class::Sht40Class(uint8_t i2cAdr) : _sht40()
     _i2cAdr = i2cAdr;
 }
 
-Sht40Class::~Sht40Class()
-{
-
-}
+Sht40Class::~Sht40Class() {}
 
 bool Sht40Class::init()
 {
