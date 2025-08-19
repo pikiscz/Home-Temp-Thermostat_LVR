@@ -96,7 +96,18 @@ void UIClass::DisplayHumidity(int humidity)
 
 void UIClass::refresh(unsigned long now) {
     if(_buttonMinus->isPressed())
-        
+    {
+        _display->resetTimer(now);
+    }
+    if(_buttonPlus->isPressed())
+    {
+        _display->resetTimer(now);
+    }
+    if(_buttonEnter->isPressed())
+    {
+        _display->resetTimer(now);
+    }
+    
     if(now - _lastRefresh > _refreshInterval)
     {
         _lastRefresh = now;

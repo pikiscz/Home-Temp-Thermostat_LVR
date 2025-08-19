@@ -33,6 +33,7 @@ public:
     inline bool getDisplayOn() { return _displayIsOn; }
     inline void setSleepTimeOut(unsigned long sleepTimeOut) { _sleepTimeOut = sleepTimeOut; }
     void sleepTimer(unsigned long now);
+    inline void resetTimer(unsigned long now) { _displayOnTimer = now; }
 
     inline void display() { _display.display(); }
     inline void clear() { _display.clear(); }
