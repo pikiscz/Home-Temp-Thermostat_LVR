@@ -97,21 +97,34 @@ void UIClass::DisplayHumidity(int humidity)
 void UIClass::refresh(unsigned long now) {
     if(_buttonMinus->isPressed())
     {
-        _display->resetTimer(now);
+        _display->resetSleepTimer(now);
     }
     if(_buttonPlus->isPressed())
     {
-        _display->resetTimer(now);
+        _display->resetSleepTimer(now);
     }
     if(_buttonEnter->isPressed())
     {
-        _display->resetTimer(now);
+        _display->resetSleepTimer(now);
+
+        if(_currentRoom < _countOfRooms - 1)
+            _currentRoom++;
+        else
+            _currentRoom = 0;
     }
     
-    if(now - _lastRefresh > _refreshInterval)
+    if(_display->getDisplayOn())
     {
-        _lastRefresh = now;
-        testPage();
+        if(now - _lastRefresh > _refreshInterval)
+        {
+            _lastRefresh = now;
+            testPage();
+        }
+    }
+    else
+    {
+        if(_currentRoom != _defaultRoom)
+            _currentRoom = _defaultRoom;
     }
 }
 

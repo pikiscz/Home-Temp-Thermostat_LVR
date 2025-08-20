@@ -31,10 +31,15 @@ void OledDisplayClass::sleepTimer(unsigned long now)
     if(_displayIsOn && _sleepTimeOut > 0)
     {
         if(now - _displayOnTimer > _sleepTimeOut)
-        {
             setDisplayOff();
-        }
     }
+}
+
+void OledDisplayClass::resetSleepTimer(unsigned long now)
+{
+    _displayOnTimer = now;
+    if(!_displayIsOn)
+        setDisplayOn();
 }
 
 void OledDisplayClass::string(int x, int y, String str)

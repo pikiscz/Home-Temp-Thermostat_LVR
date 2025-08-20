@@ -37,9 +37,11 @@ public:
         unsigned long longPressTime
     );
     ~ButtonClass();
-
+    //Set debounce time in ms
     inline void setDebounceTime(unsigned long time) { _debounceTime = time; }
+    //Return last steady state after debouncing
     inline int getState() { return _lastSteadyState; }
+    //Return actual state
     inline int getStateRaw() { return digitalRead(_buttonPin); }
     
     bool isPressed();

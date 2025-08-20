@@ -20,13 +20,22 @@ public:
     ~Sht40Class();
     
     bool init();
+    //Return serial number of sensor
     inline int getSerial() { return _sht40.readSerial(); }
+    //Return temperature offset in degC multiplied by 10
+    //(eg: Return 12 for 1.2degC)
     inline int getTempCalibrationInt() { return _tempCalibrationInt; }
+    //Set temperature offset in degC multiplied by 10
+    //(eg: Set 12 for 1.2degC)
     inline void setTempCalibrationInt(int tempCalInt) { _tempCalibrationInt = tempCalInt; }
-    
+    //Read sensor data
     void getData();
+    //Return last readed value of humidity
     inline int getHumidity() { return _humidityInt; }
+    //Return last readed temperature in degC multiplied by 10
+    //(eg: Return 215 for 21.5degC)
     inline int getTemperatureInt() { return _temperatureInt; }
+    //Return last readed temperature
     inline float getTemperature() { return float(_temperatureInt) / 10; }
 };
 

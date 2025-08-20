@@ -295,13 +295,27 @@ void loop()
   if(now - mqttLastEvent > mqttInterval)
   {
     mqttLastEvent = now;
-    mqtt.publish(
-      mqttPublishTopics[defaultRoom],
-      mqttTempSetKeys[defaultRoom], 20.5,
-      mqttTempActKeys[defaultRoom], sht40.getTemperature(),
-      mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
-      mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
-    );
+    sht40.getData();
+    
+    if(mqtt.getSynced())
+    {
+      mqtt.publish(
+        mqttPublishTopics[defaultRoom],
+        mqttTempSetKeys[defaultRoom], mqttTempSet[defaultRoom],
+        mqttTempActKeys[defaultRoom], sht40.getTemperature(),
+        mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
+        mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
+      );
+    }
+    else
+    {
+      mqtt.publish(
+        mqttPublishTopics[defaultRoom],
+        mqttTempActKeys[defaultRoom], sht40.getTemperature(),
+        mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
+        mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
+      );
+    }
   }
 
 }
@@ -375,6 +389,8 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
       if(doc[mqttTempSetKeys[i]].is<float>())
       {
         mqttTempSet[i] = doc[mqttTempSetKeys[i]];
+        if(i == defaultRoom)
+          mqtt.setSynced();
         #ifdef DEBUG_MODE_MQTT
         String str = String(mqttTempSetKeys[i]) + " = " + mqttTempSet[i];
         Serial.println(str);

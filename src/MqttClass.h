@@ -21,7 +21,8 @@ private:
 
     bool _connected = false;
     unsigned long _reconnectLastEvent;
-    unsigned long _reconnectInterval = 5000;;
+    unsigned long _reconnectInterval = 5000;
+    bool _synchoronized;
 
     WiFiClient _espClient;
     PubSubClient _client;
@@ -47,6 +48,9 @@ public:
     bool reconnect();
     void loop(unsigned long now);
     inline bool getConnected() { return _connected; }
+    inline bool getSynced() { return _synchoronized; }
+    inline void setSynced() { _synchoronized = true; }
+    inline void setSynced( bool synchornized) { _synchoronized = synchornized; }
 
     void publish(
         const char* topic,

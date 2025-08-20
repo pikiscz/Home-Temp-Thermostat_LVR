@@ -48,6 +48,8 @@ private:
     void DisplaySecondaryTemperature(float temp);
     void DisplayHumidity(int humidity);
 
+    void DisplayCurrentRoom();
+
 public:
     UIClass(
         OledDisplayClass* display,

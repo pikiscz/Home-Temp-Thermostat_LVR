@@ -28,12 +28,18 @@ public:
     void init(unsigned long sleepTimeOut);
     void init();
 
+    //Turn on display
     inline void setDisplayOn() { _display.displayOn(); _displayIsOn = true; }
+    //Turn off display
     inline void setDisplayOff() { _display.displayOff(); _displayIsOn = false; }
+    //Return TRUE when display is turned on and FALSE when it is turned off
     inline bool getDisplayOn() { return _displayIsOn; }
+    //Set time in ms of inactivity before turning off
     inline void setSleepTimeOut(unsigned long sleepTimeOut) { _sleepTimeOut = sleepTimeOut; }
+    //Check time of inactivity and then turn of display
     void sleepTimer(unsigned long now);
-    inline void resetTimer(unsigned long now) { _displayOnTimer = now; }
+    //Reset inactivity timer and turn on display in case it is off
+    void resetSleepTimer(unsigned long now);
 
     inline void display() { _display.display(); }
     inline void clear() { _display.clear(); }
