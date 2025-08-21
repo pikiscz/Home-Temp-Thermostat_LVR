@@ -127,6 +127,8 @@ const char* mqttOtherKeys[] = {
   "minutes"
 };
 
+void GetPreferences();
+void PutPreferences();
 Preferences preferences;
 
 OledDisplayClass display(
@@ -181,15 +183,8 @@ void setup()
   #ifdef DEBUG_MODE
   Serial.println("Reading flash memory:");
   #endif
-  preferences.begin("temp_ctrl", false);
-  sht40.setTempCalibration(preferences.getFloat("sht40_cal", 0));
-  tempControl.setTempControlSensMinus(preferences.getFloat("sens_minus", 0.3));
-  tempControl.setTempControlSensPlus(preferences.getFloat("sens_plus", 0.3));
-  tempControl.setTempControlIntervalMinutes(preferences.getInt("interval", 5));
-  tempControl.setTempControlDifference(preferences.getFloat("temp_diff", 0.5));
-  tempControl.setRelayTempCoefOn(preferences.getFloat("t_coef_on", 0.6));
-  tempControl.setRelayTempCoefOff(preferences.getFloat("t_coef_off", 0.4));
-  preferences.end();
+  
+  GetPreferences();
 
   #ifdef DEBUG_MODE
   Serial.print("SHT40 temp calibration: ");
@@ -210,6 +205,8 @@ void setup()
   Serial.println();
   #endif
 
+  PutPreferences();
+  
   //--------------------------------------------------------------------------
   // WiFi Init
   #ifdef DEBUG_MODE
@@ -358,6 +355,31 @@ void loop()
 
 }
 
+void GetPreferences()
+{
+  preferences.begin("tempCtrl", false);
+  sht40.setTempCalibration(preferences.getFloat("sht40cal", 0));
+  tempControl.setTempControlSensMinus(preferences.getFloat("sensMinus", 0.3));
+  tempControl.setTempControlSensPlus(preferences.getFloat("sensPlus", 0.3));
+  tempControl.setTempControlIntervalMinutes(preferences.getInt("interval", 5));
+  tempControl.setTempControlDifference(preferences.getFloat("tempDiff", 0.5));
+  tempControl.setRelayTempCoefOn(preferences.getFloat("tCoefOn", 0.6));
+  tempControl.setRelayTempCoefOff(preferences.getFloat("tCoefOff", 0.4));
+  preferences.end();
+}
+
+void PutPreferences()
+{
+  preferences.begin("tempCtrl", false);
+  preferences.putFloat("sht40cal", sht40.getTempCalibration());
+  preferences.putFloat("sensMinus", tempControl.getTempControlSensMinus());
+  preferences.putFloat("sensPlus", tempControl.getTempControlSensPlus());
+  preferences.putInt("interval", tempControl.getTempControlIntervalMinutes());
+  preferences.putFloat("tempDiff", tempControl.getTempControlDifference());
+  preferences.putFloat("tCoefOn", tempControl.getRelayTempCoefOn());
+  preferences.putFloat("tCoefOff", tempControl.getRelayTempCoefOff());
+  preferences.end();
+}
 
 /*----------------------------------------------------------------------------
   MQTT CallBack Function
