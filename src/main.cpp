@@ -22,7 +22,7 @@ Load WiFi SSID & Pass and MQTT IP Address:
 #include "networkCredentials.h"
 
 #define DEBUG_MODE
-#define DEBUG_MODE_MQTT
+//#define DEBUG_MODE_MQTT
 #define DEBUG_MODE_TEMP
 
 #define BAUDRATE 115200
@@ -37,6 +37,8 @@ Load WiFi SSID & Pass and MQTT IP Address:
 #define BUTTON2_PIN 26  //Button Plus
 #define BUTTON3_PIN 27  //Button Enter
 
+#define RELAY_PIN 19
+
 unsigned long mqttLastEvent;
 unsigned long mqttInterval = 60000; //ms
 unsigned long reconnectInterval = 5000; //ms
@@ -48,8 +50,8 @@ unsigned long uiRefreshIneterval = 100; //ms
 unsigned long buttonDebounceTime = 50; //ms
 unsigned long buttonLongPressTime = 2000; //ms
 
-float tempSetMin = 15;
-float tempSetMax = 25;
+const float tempSetMin = 15;
+const float tempSetMax = 25;
 
 /*
 0 = Living Room
@@ -58,13 +60,14 @@ float tempSetMax = 25;
 3 = Bath Room
 4 = Outside
 */
-String roomNames[] = {
+const char* roomNames[] = {
   "Obyvak",
   "Pracovna",
   "Loznice",
   "Koupelna",
   "Venkovni"
 };
+const int roomsCount = 5;
 const int defaultRoom = 1;  // WORK ROOM
 
 const char* mqttPublishTopics[] = {
@@ -124,37 +127,33 @@ const char* mqttOtherKeys[] = {
   "minutes"
 };
 
-float mqttHumidity[5];
-float mqttTempAct[5];
-float mqttTempSet[5];
-int mqttRelays[5];
-bool mqttHeatingEnabled;
-int mqttSignalRC;
-
 Preferences preferences;
 
-OledDisplayClass display(I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
+OledDisplayClass display(
+  I2C_ADDRESS_DISPLAY, I2C_SDA, I2C_SCL, FLIP_SCREEN);
 
 ButtonClass buttonMinus(
-  BUTTON1_PIN, INPUT_PULLUP, COUNT_RISING,
+  BUTTON1_PIN, INPUT_PULLUP, COUNT_NONE,
   buttonDebounceTime, buttonLongPressTime);
 ButtonClass buttonPlus(
-  BUTTON2_PIN, INPUT_PULLUP, COUNT_RISING,
+  BUTTON2_PIN, INPUT_PULLUP, COUNT_NONE,
   buttonDebounceTime, buttonLongPressTime);
 ButtonClass buttonEnter(
-  BUTTON3_PIN, INPUT_PULLUP, COUNT_RISING,
+  BUTTON3_PIN, INPUT_PULLUP, COUNT_NONE,
   buttonDebounceTime, buttonLongPressTime);
 
 Sht40Class sht40(I2C_ADDRESS_SHT40);
 
-TempControlClass tempControl(&sht40);
+TempControlClass tempControl(
+  &sht40, tempSetMin, tempSetMax, defaultRoom, RELAY_PIN);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer, MqttCallback);
 
 UIClass ui(
-  &display, &buttonMinus, &buttonPlus, &buttonEnter, &sht40,
-  &mqtt, roomNames, defaultRoom);
+  &display, &buttonMinus, &buttonPlus, &buttonEnter,
+  &sht40, &mqtt, &tempControl,
+  roomNames, roomsCount, defaultRoom);
 
 
 /*============================================================================
@@ -182,12 +181,34 @@ void setup()
   #ifdef DEBUG_MODE
   Serial.println("Reading flash memory:");
   #endif
-  preferences.begin("temp_control", false);
-  sht40.setTempCalibrationInt(preferences.getInt("sht40_temp", 0));
-  /*
-  TO-DO
-  */
+  preferences.begin("temp_ctrl", false);
+  sht40.setTempCalibration(preferences.getFloat("sht40_cal", 0));
+  tempControl.setTempControlSensMinus(preferences.getFloat("sens_minus", 0.3));
+  tempControl.setTempControlSensPlus(preferences.getFloat("sens_plus", 0.3));
+  tempControl.setTempControlIntervalMinutes(preferences.getInt("interval", 5));
+  tempControl.setTempControlDifference(preferences.getFloat("temp_diff", 0.5));
+  tempControl.setRelayTempCoefOn(preferences.getFloat("t_coef_on", 0.6));
+  tempControl.setRelayTempCoefOff(preferences.getFloat("t_coef_off", 0.4));
   preferences.end();
+
+  #ifdef DEBUG_MODE
+  Serial.print("SHT40 temp calibration: ");
+  Serial.println(sht40.getTempCalibration());
+  Serial.println("Temp control sensitivity: ");
+  Serial.print("-plus: ");
+  Serial.println(tempControl.getTempControlSensPlus());
+  Serial.print("-minus: ");
+  Serial.println(tempControl.getTempControlSensMinus());
+  Serial.print("Temp control interval: ");
+  Serial.println(tempControl.getTempControlIntervalMinutes());
+  Serial.print("Temp difference: ");
+  Serial.println(tempControl.getTempControlDifference());
+  Serial.print("Relay temp compensation ON: ");
+  Serial.println(tempControl.getRelayTempCoefOn());
+  Serial.print("Relay temp compensation OFF: ");
+  Serial.println(tempControl.getRelayTempCoefOff());
+  Serial.println();
+  #endif
 
   //--------------------------------------------------------------------------
   // WiFi Init
@@ -215,7 +236,7 @@ void setup()
   Serial.println(WiFi.localIP());
   #endif
 
-  String strIP = "Local IP:" + WiFi.localIP().toString();
+  String strIP = "Local IP:  " + WiFi.localIP().toString();
   display.string(50, 10, "OK");
   display.string(0, 20, strIP);
   display.display();
@@ -238,6 +259,8 @@ void setup()
     false
   );
   mqtt.subscribe();
+  String strMQTT = "MQTT IP: " + mqtt.getMqttServerIP();
+  display.string(0, 30, strMQTT);
 
   //--------------------------------------------------------------------------
   // Sensor SHT40
@@ -269,15 +292,17 @@ void setup()
   display.string(50, 40, String(sht40.getHumidity()) + "%rH");
   display.string(90, 40, String(float(sht40.getTemperature()), 1) + "°C");
   display.display();
-
-  delay(1000);
-  
   
   ui.setRefreshInterval(uiRefreshIneterval);
   
   mqttLastEvent = millis() - mqttInterval + 3000; //3 seconds to call mqtt publish
+  
+  delay(3000);
 }
 
+/*============================================================================
+  MAIN LOOP FUNCTION
+==============================================================================*/
 void loop()
 {
   unsigned long now = millis();
@@ -290,36 +315,53 @@ void loop()
 
   mqtt.loop(now);
 
-  ui.refresh(now);
+  ui.loop(now);
   
   if(now - mqttLastEvent > mqttInterval)
   {
     mqttLastEvent = now;
-    sht40.getData();
+    
+    tempControl.getSensorData(now);
+
+    #ifdef DEBUG_MODE_TEMP
+    Serial.println();
+    Serial.print("Humidity: ");
+    Serial.print(tempControl.getHumidity(defaultRoom)); Serial.println("% rH");
+    Serial.print("Temperature: ");
+    Serial.print(tempControl.getTempAct(defaultRoom)); Serial.println("°C");
+    Serial.print("Relay Temp Comp On:  ");
+    Serial.println(tempControl.getRelayTempCompOn());
+    Serial.print("Relay Temp Comp Off: ");
+    Serial.println(tempControl.getRelayTempCompOff());
+    #endif
     
     if(mqtt.getSynced())
     {
       mqtt.publish(
         mqttPublishTopics[defaultRoom],
-        mqttTempSetKeys[defaultRoom], mqttTempSet[defaultRoom],
-        mqttTempActKeys[defaultRoom], sht40.getTemperature(),
-        mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
-        mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
+        mqttTempSetKeys[defaultRoom], tempControl.getTempSet(defaultRoom),
+        mqttTempActKeys[defaultRoom], tempControl.getTempAct(defaultRoom),
+        mqttHumidityKeys[defaultRoom], tempControl.getHumidity(defaultRoom),
+        mqttRelayKeys[defaultRoom], tempControl.getRelays(defaultRoom)
       );
     }
     else
     {
       mqtt.publish(
         mqttPublishTopics[defaultRoom],
-        mqttTempActKeys[defaultRoom], sht40.getTemperature(),
-        mqttHumidityKeys[defaultRoom], sht40.getHumidity(),
-        mqttRelayKeys[defaultRoom], mqttRelays[defaultRoom]
+        mqttTempActKeys[defaultRoom], tempControl.getTempAct(defaultRoom),
+        mqttHumidityKeys[defaultRoom], tempControl.getHumidity(defaultRoom),
+        mqttRelayKeys[defaultRoom], tempControl.getRelays(defaultRoom)
       );
     }
   }
 
 }
 
+
+/*----------------------------------------------------------------------------
+  MQTT CallBack Function
+ -----------------------------------------------------------------------------*/
 void MqttCallback(char* topic, byte* message, unsigned long length)
 {
   #ifdef DEBUG_MODE_MQTT
@@ -360,27 +402,27 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
       {
         if(doc[mqttHumidityKeys[i]].is<float>())
         {
-          mqttHumidity[i] = doc[mqttHumidityKeys[i]];
+          tempControl.setHumidity(doc[mqttHumidityKeys[i]], i);
           #ifdef DEBUG_MODE_MQTT
-          String str = String(mqttHumidityKeys[i]) + " = " + mqttHumidity[i];
+          String str = String(mqttHumidityKeys[i]) + " = " + tempControl.getHumidity(i);
           Serial.println(str);
           #endif
         }
         
         if(doc[mqttTempActKeys[i]].is<float>())
         {
-          mqttTempAct[i] = doc[mqttTempActKeys[i]];
+          tempControl.setTempAct(doc[mqttTempActKeys[i]], i);
           #ifdef DEBUG_MODE_MQTT
-          String str = String(mqttTempActKeys[i]) + " = " + mqttTempAct[i];
+          String str = String(mqttTempActKeys[i]) + " = " + tempControl.getTempAct(i);
           Serial.println(str);
           #endif
         }
 
         if(doc[mqttRelayKeys[i]].is<int>())
         {
-          mqttRelays[i] = doc[mqttRelayKeys[i]];
+          tempControl.setRelays(doc[mqttRelayKeys[i]], i);
           #ifdef DEBUG_MODE_MQTT
-          String str = String(mqttRelayKeys[i]) + " = " + mqttRelays[i];
+          String str = String(mqttRelayKeys[i]) + " = " + tempControl.getRelays(i);
           Serial.println(str);
           #endif
         }
@@ -388,11 +430,11 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
 
       if(doc[mqttTempSetKeys[i]].is<float>())
       {
-        mqttTempSet[i] = doc[mqttTempSetKeys[i]];
-        if(i == defaultRoom)
+        tempControl.setTempSet(doc[mqttTempSetKeys[i]], i);
+        if(i == defaultRoom && !mqtt.getSynced())
           mqtt.setSynced();
         #ifdef DEBUG_MODE_MQTT
-        String str = String(mqttTempSetKeys[i]) + " = " + mqttTempSet[i];
+        String str = String(mqttTempSetKeys[i]) + " = " + tempControl.getTempSet(i);
         Serial.println(str);
         #endif
       }
@@ -405,7 +447,7 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
   {
     if(doc[mqttOtherKeys[0]].is<bool>())
     {
-      mqttHeatingEnabled = doc[mqttOtherKeys[0]];
+      tempControl.setHeatingEnabled(doc[mqttOtherKeys[0]]);
     }
   }
   
@@ -413,7 +455,7 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
   {
     if(doc[mqttOtherKeys[1]].is<int>())
     {
-      mqttSignalRC = doc[mqttOtherKeys[1]];
+      tempControl.setSignalRC(doc[mqttOtherKeys[1]]);
     }
   }
   

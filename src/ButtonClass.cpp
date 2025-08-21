@@ -1,7 +1,7 @@
 #include "ButtonClass.h"
 
 ButtonClass::ButtonClass(int buttonPin) : ButtonClass(
-    buttonPin, INPUT_PULLUP, COUNT_RISING, 50, 2000) {}
+    buttonPin, INPUT_PULLUP, COUNT_NONE, 50, 2000) {}
 
 ButtonClass::ButtonClass(
     int buttonPin,
@@ -16,6 +16,7 @@ ButtonClass::ButtonClass(
 
     _countMode = countMode;
     _debounceTime = debounceTime;
+    _longPressTime = longPressTime;
 
     if(pullUpMode == INPUT_PULLDOWN)
     {
@@ -72,8 +73,9 @@ void ButtonClass::loop(unsigned long now)
     {
         if(_previousSteadyState == HIGH && _lastSteadyState == LOW)
         {
-            if(now - _lastDebounceTime > _longPressTime)
-                _longPress = true;
+            _lastLongPressTime = now;
+            if(_longPress)
+                _longPress = false;
             
             if(_countMode == COUNT_FALLING || _countMode == COUNT_BOTH)
                 _count++;
@@ -81,11 +83,11 @@ void ButtonClass::loop(unsigned long now)
 
         if(_previousSteadyState == LOW && _lastSteadyState == HIGH)
         {
-            if(_longPress)
-                _longPress = false;
-            
+            if(now - _lastLongPressTime > _longPressTime)
+                _longPress = true;
+
             if(_countMode == COUNT_RISING || _countMode == COUNT_BOTH)
-                _count++;    
+                _count++;
         }
     }
 }

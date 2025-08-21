@@ -6,6 +6,7 @@
 #include "ButtonClass.h"
 #include "Sht40Class.h"
 #include "MqttClass.h"
+#include "TempControlClass.h"
 
 
 class UIClass
@@ -20,8 +21,8 @@ private:
     uint8_t _iconDisabledX[30] = {1, 4, 7, 0, 3, 6, 0, 3, 6, 7, 0, 3, 4, 5, 6, 1, 2, 3, 4, 7, 0, 1, 4, 7, 1, 4, 7, 0, 3, 6};
     uint8_t _iconDisabledY[30] = {0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7};
 
-    const String* _roomNames;
-    int _countOfRooms;
+    const char** _roomNames;
+    int _roomsCount;
     int _defaultRoom;
     int _currentRoom;
 
@@ -34,21 +35,29 @@ private:
     ButtonClass* _buttonEnter;
     Sht40Class* _sht40;
     MqttClass* _mqtt;
+    TempControlClass* _tempControl;
 
     unsigned long _lastRefresh;
     unsigned long _refreshInterval;
 
-    void DisplayActTime(int timeHH, int timeMM);
-    inline String TimeFormater(int time) { return time<10 ? "0" + String(time) : String(time); };
-    void DisplayConnectionStatus(bool online);
-    void DisplayHeatingDisabled(bool heating);
-    void DisplayRelayState(int relay);
-    void DisplayRoomName(int roomNumber);
-    void DisplayMainTemperature(float temp);
-    void DisplaySecondaryTemperature(float temp);
-    void DisplayHumidity(int humidity);
+    bool _drawSettings;
+    int _settingsPages = 2;
+    int _settingsCurrentPage;
+    int _settingsCurrentRow;
 
-    void DisplayCurrentRoom();
+    void DrawActTime(int timeHH, int timeMM);
+    inline String TimeFormater(int time) { return time<10 ? "0" + String(time) : String(time); };
+    void DrawConnectionStatus(bool online);
+    void DrawHeatingDisabled();
+    void DrawRelayState(int relay);
+    void DrawRoomName(int roomNumber);
+    void DrawMainTemperature(float temp);
+    void DrawSecondaryTemperature(float temp);
+    void DrawHumidity(int humidity);
+
+    void DrawCurrentRoomHeatingOn();
+    void DrawCurrentRoomHeatingOff();
+    void DrawSettings();
 
 public:
     UIClass(
@@ -58,15 +67,16 @@ public:
         ButtonClass* buttonEnter,
         Sht40Class* sht40,
         MqttClass* mqtt,
-        String roomNames[],
+        TempControlClass* tempControl,
+        const char** roomNames,
+        int roomsCount,
         int defaultRoom
     );
     ~UIClass();
     
     inline void setActTime(int timeHH, int timeMM) { _timeHH = timeHH; _timeMM = timeMM; }
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
-    void refresh(unsigned long now);
-    void testPage();
+    void loop(unsigned long now);
 };
 
 #endif

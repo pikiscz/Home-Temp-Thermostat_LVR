@@ -63,7 +63,7 @@ void MqttClass::subscribeTopics(
 void MqttClass::publishTopics(const char* topics[], int count)
 {
     _publishTopics = topics;
-    _subscribeTopicsCount1 = count;
+    _publishTopicsCount = count;
 }
 
 void MqttClass::subscribe()

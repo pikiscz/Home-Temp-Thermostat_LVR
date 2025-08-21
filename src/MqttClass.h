@@ -36,37 +36,54 @@ public:
         std::function<void(char*, uint8_t*, unsigned int)> mqttCallback
     );
     ~MqttClass();
+    //Return MQTT IP Address
+    inline String getMqttServerIP() {return String(_mqttServer); }
+    //Set callback function to receive messages
     void setCallback(std::function<void(char*, uint8_t*, unsigned int)> mqttCallback);
+    //A list of topics to be subscribed for callback function
     void subscribeTopics(const char* topics[], int count);
     void subscribeTopics(
         const char* topics1[], int count1,
         const char* topics2[], int count2,
         bool joinToOne
     );
+    //Set a list of publishing topic
     void publishTopics(const char* topics[], int count);
+    //Subscribe to all topics set by subscribeTopics()
     void subscribe();
+    //Try to connect to MQTT server with random client ID
+    //Return TRUE when succesfully connected, othewise return FALSE
     bool reconnect();
+    //Loop funciton checks for connection status and incomming messages
     void loop(unsigned long now);
+    //Return TRUE when connected to MQTT server
     inline bool getConnected() { return _connected; }
+    //Return synchornizetion status
+    //Status is set via getSynced()
     inline bool getSynced() { return _synchoronized; }
+    //Set synchronizetion status to TRUE
     inline void setSynced() { _synchoronized = true; }
+    //Set synchonization status
     inline void setSynced( bool synchornized) { _synchoronized = synchornized; }
-
+    //Publish to MQTT server
     void publish(
         const char* topic,
         const char* key1, float value1
     );
+    //Publish to MQTT server
     void publish(
         const char* topic,
         const char* key1, float value1,
         const char* key2, float value2
     );
+    //Publish to MQTT server
     void publish(
         const char* topic,
         const char* key1, float value1,
         const char* key2, float value2,
         const char* key3, float value3
     );
+    //Publish to MQTT server
     void publish(
         const char* topic,
         const char* key1, float value1,
@@ -74,11 +91,6 @@ public:
         const char* key3, float value3,
         const char* key4, float value4
     );
-    void publish(String key1, float value1, int topic);
-    void publish(String key1, float value1, String key2, float value2, int topic);
-    void publish(String key1, float value1, String key2, float value2, String key3, float value3, int topic);
-    void publish(String key1, float value1, String key2, float value2, String key3, float value3, String key4, float value4, int topic);
-    
 };
 
 #endif

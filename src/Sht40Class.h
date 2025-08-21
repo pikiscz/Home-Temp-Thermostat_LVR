@@ -28,6 +28,12 @@ public:
     //Set temperature offset in degC multiplied by 10
     //(eg: Set 12 for 1.2degC)
     inline void setTempCalibrationInt(int tempCalInt) { _tempCalibrationInt = tempCalInt; }
+    
+    //Return temperature offset in degC
+    inline float getTempCalibration() { return float(_tempCalibrationInt) / 10; }
+    //Set temperature offset in degC
+    inline void setTempCalibration(float tempCal) { _tempCalibrationInt = tempCal * 10; }
+    
     //Read sensor data
     void getData();
     //Return last readed value of humidity

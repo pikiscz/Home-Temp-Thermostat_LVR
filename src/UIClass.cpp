@@ -7,7 +7,9 @@ UIClass::UIClass(
     ButtonClass* buttonEnter,
     Sht40Class* sht40,
     MqttClass* mqtt,
-    String roomNames[],
+    TempControlClass* tempControl,
+    const char** roomNames,
+    int roomsCount,
     int defaultRoom
 )
 {
@@ -17,24 +19,26 @@ UIClass::UIClass(
     _buttonEnter = buttonEnter;
     _sht40 = sht40;
     _mqtt = mqtt;
+    _tempControl = tempControl;
 
-    _countOfRooms = sizeof(roomNames) / sizeof(roomNames[0]);
+    _roomsCount = roomsCount;
 
-    _roomNames = new const String[_countOfRooms];
     _roomNames = roomNames;
     _defaultRoom = defaultRoom;
     _currentRoom = defaultRoom;
+
+    _drawSettings = false;
 }
 
 UIClass::~UIClass() {}
 
-void UIClass::DisplayActTime(int timeHH, int timeMM)
+void UIClass::DrawActTime(int timeHH, int timeMM)
 {
     String str = TimeFormater(timeHH) + ":" + TimeFormater(timeMM);
     _display->string(111, 3, str, FONT_10, TEXT_RIGHT);
 }
 
-void UIClass::DisplayConnectionStatus(bool online)
+void UIClass::DrawConnectionStatus(bool online)
 {
     if(online)
     {
@@ -51,18 +55,15 @@ void UIClass::DisplayConnectionStatus(bool online)
     }
 }
 
-void UIClass::DisplayHeatingDisabled(bool heating)
+void UIClass::DrawHeatingDisabled()
 {
-    if(!heating)
+    for(int i = 0; i < sizeof(_iconDisabledX); i++)
     {
-        for(int i = 0; i < sizeof(_iconDisabledX); i++)
-        {
-            _display->pixel(3 + _iconDisabledX[i], 50 + _iconDisabledY[i]);
-        }
+        _display->pixel(3 + _iconDisabledX[i], 50 + _iconDisabledY[i]);
     }
 }
 
-void UIClass::DisplayRelayState(int relay)
+void UIClass::DrawRelayState(int relay)
 {
     if(relay == 1)
     {
@@ -72,29 +73,30 @@ void UIClass::DisplayRelayState(int relay)
     }
 }
 
-void UIClass::DisplayRoomName(int roomNumber)
+void UIClass::DrawRoomName(int roomNumber)
 {
     String str = _roomNames[roomNumber];
     _display->string(3, 3, str);
 }
 
-void UIClass::DisplayMainTemperature(float temp)
+void UIClass::DrawMainTemperature(float temp)
 {
     _display->string(84, 17, String(temp, 1), FONT_24, TEXT_RIGHT);
     _display->string(86, 19, "°C", FONT_10, TEXT_LEFT);
 }
 
-void UIClass::DisplaySecondaryTemperature(float temp)
+void UIClass::DrawSecondaryTemperature(float temp)
 {
     _display->string(3, 47, String(temp,1) + "°C");
 }
 
-void UIClass::DisplayHumidity(int humidity)
+void UIClass::DrawHumidity(int humidity)
 {
     _display->string(125, 47, String(humidity) + "%rH", TEXT_RIGHT);
 }
 
-void UIClass::refresh(unsigned long now) {
+
+void UIClass::loop(unsigned long now) {
     if(_buttonMinus->isPressed())
     {
         _display->resetSleepTimer(now);
@@ -105,12 +107,33 @@ void UIClass::refresh(unsigned long now) {
     }
     if(_buttonEnter->isPressed())
     {
+        if(_display->getDisplayOn())
+        {
+            if(!_drawSettings)
+            {
+                if(_currentRoom < _roomsCount - 1)
+                    _currentRoom++;
+                else
+                    _currentRoom = 0;
+            }
+            else
+            {
+                if(_settingsCurrentPage < _settingsPages - 1)
+                    _settingsCurrentPage++;
+                else
+                    _settingsCurrentPage = 0;
+            }
+        }
         _display->resetSleepTimer(now);
+    }
 
-        if(_currentRoom < _countOfRooms - 1)
-            _currentRoom++;
+    if(_buttonEnter->isLongPress())
+    {
+        _buttonEnter->resetLongPress();
+        if(_drawSettings)
+            _drawSettings = false;
         else
-            _currentRoom = 0;
+            _drawSettings = true;
     }
     
     if(_display->getDisplayOn())
@@ -118,26 +141,71 @@ void UIClass::refresh(unsigned long now) {
         if(now - _lastRefresh > _refreshInterval)
         {
             _lastRefresh = now;
-            testPage();
+            
+            if(!_drawSettings)
+            {
+                if(_tempControl->getHeatingEnabled())
+                    DrawCurrentRoomHeatingOn();
+                else
+                    DrawCurrentRoomHeatingOff();
+            }
+            else
+            {
+                DrawSettings();
+            }
         }
     }
     else
     {
         if(_currentRoom != _defaultRoom)
             _currentRoom = _defaultRoom;
+        
+        if(_drawSettings)
+        {
+            _drawSettings = false;
+            _settingsCurrentPage = 0;
+            _settingsCurrentRow = 0;
+        }
     }
 }
 
-void UIClass::testPage()
+void UIClass::DrawCurrentRoomHeatingOn()
 {
     _display->clear();
-    DisplayActTime(_timeHH, _timeMM);
-    DisplayConnectionStatus(_mqtt->getConnected());
-    DisplayHeatingDisabled(true);
-    DisplayRelayState(true);
-    DisplayRoomName(1);
-    DisplayMainTemperature(_sht40->getTemperature());
-    DisplaySecondaryTemperature(21.5);
-    DisplayHumidity(_sht40->getHumidity());
+    DrawActTime(_timeHH, _timeMM);
+    DrawConnectionStatus(_mqtt->getConnected());
+    DrawRoomName(_currentRoom);
+    if(_currentRoom != 4)
+    {
+        DrawRelayState(_tempControl->getRelays(_currentRoom));
+        DrawMainTemperature(_tempControl->getTempSet(_currentRoom));
+        DrawSecondaryTemperature(_tempControl->getTempAct(_currentRoom));
+    }
+    else
+    {
+        DrawMainTemperature(_tempControl->getTempAct(_currentRoom));
+    }
+    DrawHumidity(_tempControl->getHumidity(_currentRoom));
+    _display->display();
+}
+
+void UIClass::DrawCurrentRoomHeatingOff()
+{
+    _display->clear();
+    DrawActTime(_timeHH, _timeMM);
+    DrawConnectionStatus(_mqtt->getConnected());
+    DrawHeatingDisabled();
+    DrawRoomName(_currentRoom);
+    DrawMainTemperature(_tempControl->getTempAct(_currentRoom));
+    DrawHumidity(_tempControl->getHumidity(_currentRoom));
+    _display->display();
+}
+
+void UIClass::DrawSettings()
+{
+    _display->clear();
+    _display->string(3, 3, "Nastaveni");
+    String str = String(_settingsCurrentPage + 1) + "/" + String(_settingsPages);
+    _display->string(125, 3, str, TEXT_RIGHT);
     _display->display();
 }
