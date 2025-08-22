@@ -17,7 +17,7 @@ private:
     int _subscribeTopicsCount1;
     int _subscribeTopicsCount2;
     int _publishTopicsCount;
-
+    int _defaultTopic;
 
     bool _connected = false;
     unsigned long _reconnectLastEvent;
@@ -40,15 +40,17 @@ public:
     inline String getMqttServerIP() {return String(_mqttServer); }
     //Set callback function to receive messages
     void setCallback(std::function<void(char*, uint8_t*, unsigned int)> mqttCallback);
-    //A list of topics to be subscribed for callback function
-    void subscribeTopics(const char* topics[], int count);
-    void subscribeTopics(
+    //Set list of topics to be subscribed for callback function
+    void setSubscribeTopics(const char* topics[], int count);
+    void setSubscribeTopics(
         const char* topics1[], int count1,
         const char* topics2[], int count2,
         bool joinToOne
     );
-    //Set a list of publishing topic
-    void publishTopics(const char* topics[], int count);
+    //Set a list of publishing topics
+    void setPublishTopics(const char* topics[], int count, int defaultTopic);
+    //Return list of publishing topics
+    inline const char* getPublishTopics(int topicNumber) { return _publishTopics[topicNumber]; }
     //Subscribe to all topics set by subscribeTopics()
     void subscribe();
     //Try to connect to MQTT server with random client ID

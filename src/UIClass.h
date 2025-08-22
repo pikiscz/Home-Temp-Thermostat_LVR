@@ -40,6 +40,12 @@ private:
     unsigned long _lastRefresh;
     unsigned long _refreshInterval;
 
+    bool _tempSetToPublish = false;
+    unsigned long _tempSetToPublishTime;
+    unsigned long _tempSetToPublishDelay = 1000;
+    int _roomNumberToPublish;
+    bool _tempSetReadyToPublish = false;
+
     bool _drawSettings;
     int _settingsPages = 2;
     int _settingsCurrentPage;
@@ -77,6 +83,14 @@ public:
     inline void setActTime(int timeHH, int timeMM) { _timeHH = timeHH; _timeMM = timeMM; }
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
     void loop(unsigned long now);
+
+    //Return TRUE when tempSet is waiting to publish
+    //setTempToPublish(false) should be called after publishing
+    inline bool getTempToPublish() {return _tempSetReadyToPublish; }
+    //Set TRUE when tempSet is waiting to publish
+    inline void setTempToPublish(bool publish) { _tempSetReadyToPublish = publish; }
+    //Return room number to publish tempSet
+    inline int getRoomNumberToPublish() { return _roomNumberToPublish; }
 };
 
 #endif

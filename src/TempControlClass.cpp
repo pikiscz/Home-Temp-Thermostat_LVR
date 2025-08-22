@@ -52,7 +52,7 @@ void TempControlClass::getSensorData(unsigned long now)
     if(_relays[_defaultRoom] == 0 && _relayTempCompOff > 0)
     {
         int seconds = (now - _relayTimeOff) / 1000;
-        _relayTempCompOff = _relayTempCoefOn - (seconds * _relayTempCoefOff / 10000);
+        _relayTempCompOff = _relayTempCompOn - (seconds * _relayTempCoefOff / 10000);
         _tempAct[_defaultRoom] -= _relayTempCompOff;
     }
 }
@@ -60,33 +60,40 @@ void TempControlClass::getSensorData(unsigned long now)
 void TempControlClass::loop(unsigned long now)
 {
     if(now - _lastTempControlEvent > _tempControlInterval)
-    {
-        _lastTempControlEvent = now;
+        tempControl(now);    
+}
 
-        if(_tempAct[_defaultRoom] <= (_tempSet[_defaultRoom] - _controlSensMinus))
+void TempControlClass::tempControl(unsigned long now)
+{
+    _lastTempControlEvent = now;
+
+    Serial.print("tempAct: "); Serial.println(_tempAct[_defaultRoom]);
+    Serial.print("tempSet: "); Serial.println(_tempSet[_defaultRoom]);
+    
+
+    if(_tempAct[_defaultRoom] <= (_tempSet[_defaultRoom] - _controlSensMinus))
+    {
+        if(((_previousTemp1 - _tempAct[_defaultRoom]) <= _tempDifference) ||
+            ((_previousTemp2 - _tempAct[_defaultRoom]) <= _tempDifference))
         {
-            if(((_previousTemp1 - _tempAct[_defaultRoom]) <= _tempDifference) ||
-                ((_previousTemp2 - _tempAct[_defaultRoom]) <= _tempDifference))
+            if(_relays[_defaultRoom] == 0)
             {
-                if(_relays[_defaultRoom] == 0)
-                {
-                    digitalWrite(_relayPin, HIGH);
-                    _relays[_defaultRoom] = 1;
-                    _relayTimeOn = now;
-                    _relayTempCompOn = _relayTempCompOff;
-                }
+                digitalWrite(_relayPin, HIGH);
+                _relays[_defaultRoom] = 1;
+                _relayTimeOn = now;
+                _relayTempCompOn = _relayTempCompOff;
             }
         }
+    }
 
-        if(_tempAct[_defaultRoom] >= (_tempSet[_defaultRoom] - _controlSensPlus))
+    if(_tempAct[_defaultRoom] >= (_tempSet[_defaultRoom] + _controlSensPlus))
+    {
+        if(_relays[_defaultRoom] == 1)
         {
-            if(_relays[_defaultRoom] == 1)
-            {
-                digitalWrite(_relayPin, LOW);
-                _relays[_defaultRoom] = 0;
-                _relayTimeOff = now;
-                _relayTempCompOff = _relayTempCompOn;
-            }
+            digitalWrite(_relayPin, LOW);
+            _relays[_defaultRoom] = 0;
+            _relayTimeOff = now;
+            _relayTempCompOff = _relayTempCompOn;
         }
     }
     _previousTemp2 = _previousTemp1;

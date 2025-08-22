@@ -204,8 +204,6 @@ void setup()
   Serial.println(tempControl.getRelayTempCoefOff());
   Serial.println();
   #endif
-
-  PutPreferences();
   
   //--------------------------------------------------------------------------
   // WiFi Init
@@ -240,22 +238,25 @@ void setup()
  
   //--------------------------------------------------------------------------
   // MQTT Server Init
-  int subscribeCount1, subscribeCount2;
+  int subscribeCount1, subscribeCount2, publishCount;
   for(const char* topic : mqttSubscribeTopicsRooms)
-  {
     subscribeCount1++;
-  }
+
   for(const char* topic : mqttSubscribeTopicsOthers)
-  {
     subscribeCount2++;
-  }
+
+  for(const char* topic : mqttPublishTopics)
+    publishCount++;
   
-  mqtt.subscribeTopics(
+  mqtt.setSubscribeTopics(
     mqttSubscribeTopicsRooms, subscribeCount1,
     mqttSubscribeTopicsOthers, subscribeCount2,
     false
   );
   mqtt.subscribe();
+  
+  mqtt.setPublishTopics(mqttPublishTopics, publishCount, defaultRoom);
+
   String strMQTT = "MQTT IP: " + mqtt.getMqttServerIP();
   display.string(0, 30, strMQTT);
 
@@ -312,7 +313,20 @@ void loop()
 
   mqtt.loop(now);
 
+  tempControl.loop(now);
+
   ui.loop(now);
+
+  if(ui.getTempToPublish())
+  {
+    ui.setTempToPublish(false);
+    mqtt.publish(
+      mqttPublishTopics[ui.getRoomNumberToPublish()],
+      mqttTempSetKeys[ui.getRoomNumberToPublish()],
+      tempControl.getTempSet(ui.getRoomNumberToPublish())
+    );
+    
+  }
   
   if(now - mqttLastEvent > mqttInterval)
   {
@@ -326,6 +340,8 @@ void loop()
     Serial.print(tempControl.getHumidity(defaultRoom)); Serial.println("% rH");
     Serial.print("Temperature: ");
     Serial.print(tempControl.getTempAct(defaultRoom)); Serial.println("°C");
+    Serial.print("Temp Calibration: ");
+    Serial.println(sht40.getTempCalibration());
     Serial.print("Relay Temp Comp On:  ");
     Serial.println(tempControl.getRelayTempCompOn());
     Serial.print("Relay Temp Comp Off: ");
@@ -355,6 +371,9 @@ void loop()
 
 }
 
+/*----------------------------------------------------------------------------
+  Preferences Functions
+ -----------------------------------------------------------------------------*/
 void GetPreferences()
 {
   preferences.begin("tempCtrl", false);
@@ -452,13 +471,22 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
 
       if(doc[mqttTempSetKeys[i]].is<float>())
       {
-        tempControl.setTempSet(doc[mqttTempSetKeys[i]], i);
-        if(i == defaultRoom && !mqtt.getSynced())
-          mqtt.setSynced();
-        #ifdef DEBUG_MODE_MQTT
-        String str = String(mqttTempSetKeys[i]) + " = " + tempControl.getTempSet(i);
-        Serial.println(str);
-        #endif
+        float temp = doc[mqttTempSetKeys[i]];
+        if(temp != tempControl.getTempSet(i))
+        {
+          tempControl.setTempSet(temp, i);
+          if(i == defaultRoom)
+          {
+            if(!mqtt.getSynced())
+              mqtt.setSynced();
+            tempControl.tempControl(millis());
+          }
+          #ifdef DEBUG_MODE_MQTT
+          String str = String(mqttTempSetKeys[i]) + " = " + tempControl.getTempSet(i);
+          Serial.println(str);
+          Serial.println(mqtt.getSynced());
+          #endif
+        }
       }
     }
     

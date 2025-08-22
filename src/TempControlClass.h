@@ -98,13 +98,23 @@ public:
     //Set termperature control interval in minutes
     inline void setTempControlIntervalMinutes(int time) { _tempControlInterval = time * 60000; }
 
+    //Return minimal value of set temperature
+    inline float getTempSetMin() { return float(_tempSetMin) / 10; }
+    //Set minimal value of set temperature
+    inline void setTempSetMin(float tempSetMin) { _tempSetMin = tempSetMin * 10; }
+
+    //Return maximal value of set temperature
+    inline float getTempSetMax() { return float(_tempSetMax) / 10; }
+    //Set minimal value of set temperature
+    inline void setTempSetMax(float tempSetMax) { _tempSetMax = tempSetMax * 10; }
+
     //Return actual humidity of selected room
     inline int getHumidity(int room) { return _humidity[room]; }
     //Set actual humidity for selected room
     inline void setHumidity(int humidity, int room) { _humidity[room] = humidity;}
 
     //Return actual temperature of selected room
-    inline float getTempAct(int room) { return float(_tempAct[room]) / 10;}
+    inline float getTempAct(int room) { return float(_tempAct[room]) / 10; }
     //Set actual temperature for selected room
     inline void setTempAct(float tempAct, int room) { _tempAct[room] = tempAct * 10; }
 
@@ -132,6 +142,8 @@ public:
     void getSensorData(unsigned long now);
     //Loop function
     void loop(unsigned long now);
+    //Temperatur control
+    void tempControl(unsigned long now);
 };
 
 #endif

@@ -30,13 +30,13 @@ void MqttClass::setCallback(std::function<void(char*, uint8_t*, unsigned int)> m
     _client.setCallback(mqttCallback);
 }
 
-void MqttClass::subscribeTopics(const char* topics[], int count)
+void MqttClass::setSubscribeTopics(const char* topics[], int count)
 {
     _subscribeTopics1 = topics;
     _subscribeTopicsCount1 = count;
 }
 
-void MqttClass::subscribeTopics(
+void MqttClass::setSubscribeTopics(
     const char* topics1[], int count1,
     const char* topics2[], int count2,
     bool joinToOne
@@ -60,10 +60,11 @@ void MqttClass::subscribeTopics(
     }
 }
 
-void MqttClass::publishTopics(const char* topics[], int count)
+void MqttClass::setPublishTopics(const char* topics[], int count, int defaultTopic)
 {
     _publishTopics = topics;
     _publishTopicsCount = count;
+    _defaultTopic = defaultTopic;
 }
 
 void MqttClass::subscribe()
@@ -89,6 +90,7 @@ bool MqttClass::reconnect()
         {
             subscribe();
             _connected = true;
+            publish(_publishTopics[_defaultTopic], "connected", true);
         }
         else
         {

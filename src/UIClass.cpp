@@ -99,10 +99,38 @@ void UIClass::DrawHumidity(int humidity)
 void UIClass::loop(unsigned long now) {
     if(_buttonMinus->isPressed())
     {
+        if(_display->getDisplayOn())
+        {
+            if(!_drawSettings)
+            {
+                if(_tempControl->getTempSet(_currentRoom) > _tempControl->getTempSetMin())
+                {
+                    _tempControl->setTempSet(_tempControl->getTempSet(_currentRoom) - 0.5, _currentRoom);
+                    
+                    _tempSetToPublish = true;
+                    _tempSetToPublishTime = now;
+                    _roomNumberToPublish = _currentRoom;
+                }
+            }
+        }
         _display->resetSleepTimer(now);
     }
     if(_buttonPlus->isPressed())
     {
+        if(_display->getDisplayOn())
+        {
+            if(!_drawSettings)
+            {
+                if(_tempControl->getTempSet(_currentRoom) < _tempControl->getTempSetMax())
+                {
+                    _tempControl->setTempSet(_tempControl->getTempSet(_currentRoom) + 0.5, _currentRoom);
+                    
+                    _tempSetToPublish = true;
+                    _tempSetToPublishTime = now;
+                    _roomNumberToPublish = _currentRoom;
+                }
+            }
+        }
         _display->resetSleepTimer(now);
     }
     if(_buttonEnter->isPressed())
@@ -115,6 +143,9 @@ void UIClass::loop(unsigned long now) {
                     _currentRoom++;
                 else
                     _currentRoom = 0;
+                
+                if(_tempSetToPublish)
+                    _tempSetToPublishTime += _tempSetToPublishDelay;
             }
             else
             {
@@ -125,6 +156,15 @@ void UIClass::loop(unsigned long now) {
             }
         }
         _display->resetSleepTimer(now);
+    }
+    
+    if(_tempSetToPublish)
+    {
+        if(now - _tempSetToPublishTime > _tempSetToPublishDelay)
+        {
+            _tempSetToPublish = false;
+            _tempSetReadyToPublish = true;
+        }
     }
 
     if(_buttonEnter->isLongPress())
