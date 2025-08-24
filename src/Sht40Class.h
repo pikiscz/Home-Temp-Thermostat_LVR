@@ -13,6 +13,7 @@ private:
     sensors_event_t _humidity;
     sensors_event_t _temperature;
     int _humidityInt;       //Relative humidity as integer
+    int _humidityCalibrationInt;
     int _temperatureInt;    //Sensor temperature (float) multiplied by 10
     int _tempCalibrationInt;    //In degC multiplied by 10
 public:
@@ -22,6 +23,12 @@ public:
     bool init();
     //Return serial number of sensor
     inline int getSerial() { return _sht40.readSerial(); }
+
+    //Return humidity calibration in %
+    inline int getHumidityCalibration() {return _humidityCalibrationInt; }
+    //Set humidity calibration in %
+    inline void setHumidityCalibration(int humidityCal) { _humidityCalibrationInt = humidityCal; }
+
     //Return temperature offset in degC multiplied by 10
     //(eg: Return 12 for 1.2degC)
     inline int getTempCalibrationInt() { return _tempCalibrationInt; }
@@ -37,12 +44,12 @@ public:
     //Read sensor data
     void getData();
     //Return last readed value of humidity
-    inline int getHumidity() { return _humidityInt; }
+    int getHumidity();
     //Return last readed temperature in degC multiplied by 10
     //(eg: Return 215 for 21.5degC)
-    inline int getTemperatureInt() { return _temperatureInt; }
+    int getTemperatureInt();
     //Return last readed temperature
-    inline float getTemperature() { return float(_temperatureInt) / 10; }
+    float getTemperature();
 };
 
 #endif

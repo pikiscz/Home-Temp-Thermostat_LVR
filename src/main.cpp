@@ -23,7 +23,6 @@ Load WiFi SSID & Pass and MQTT IP Address:
 
 #define DEBUG_MODE
 //#define DEBUG_MODE_MQTT
-#define DEBUG_MODE_TEMP
 
 #define BAUDRATE 115200
 
@@ -49,6 +48,8 @@ unsigned long uiRefreshIneterval = 100; //ms
 
 unsigned long buttonDebounceTime = 50; //ms
 unsigned long buttonLongPressTime = 2000; //ms
+
+unsigned long sensorInterval = 60000; //ms
 
 const float tempSetMin = 15;
 const float tempSetMax = 25;
@@ -147,7 +148,7 @@ ButtonClass buttonEnter(
 Sht40Class sht40(I2C_ADDRESS_SHT40);
 
 TempControlClass tempControl(
-  &sht40, tempSetMin, tempSetMax, defaultRoom, RELAY_PIN);
+  &sht40, sensorInterval, tempSetMin, tempSetMax, defaultRoom, RELAY_PIN);
 
 void MqttCallback(char* topic, byte* message, unsigned long length);
 MqttClass mqtt(mqttServer, MqttCallback);
@@ -176,7 +177,7 @@ void setup()
   //--------------------------------------------------------------------------
   // OLED Display Init
   display.init(displaySleepTimeOut);
-  display.string(0, 0, "Living Room");
+  display.string(0, 0, String(roomNames[defaultRoom]));
 
   //--------------------------------------------------------------------------
   // Flash Memory Init
@@ -292,10 +293,10 @@ void setup()
   display.display();
   
   ui.setRefreshInterval(uiRefreshIneterval);
+  tempControl.delayedTempControl(2000);
+  mqttLastEvent = millis() - mqttInterval + 2000; //2 seconds to call mqtt publish
   
-  mqttLastEvent = millis() - mqttInterval + 3000; //3 seconds to call mqtt publish
-  
-  delay(3000);
+  delay(2000);
 }
 
 /*============================================================================
@@ -311,42 +312,15 @@ void loop()
 
   display.sleepTimer(now);
 
+  tempControl.getSensorData(now);
+  
+  tempControl.tempControl(now);
+
   mqtt.loop(now);
 
-  tempControl.loop(now);
-
-  ui.loop(now);
-
-  if(ui.getTempToPublish())
-  {
-    ui.setTempToPublish(false);
-    mqtt.publish(
-      mqttPublishTopics[ui.getRoomNumberToPublish()],
-      mqttTempSetKeys[ui.getRoomNumberToPublish()],
-      tempControl.getTempSet(ui.getRoomNumberToPublish())
-    );
-    
-  }
-  
   if(now - mqttLastEvent > mqttInterval)
   {
     mqttLastEvent = now;
-    
-    tempControl.getSensorData(now);
-
-    #ifdef DEBUG_MODE_TEMP
-    Serial.println();
-    Serial.print("Humidity: ");
-    Serial.print(tempControl.getHumidity(defaultRoom)); Serial.println("% rH");
-    Serial.print("Temperature: ");
-    Serial.print(tempControl.getTempAct(defaultRoom)); Serial.println("°C");
-    Serial.print("Temp Calibration: ");
-    Serial.println(sht40.getTempCalibration());
-    Serial.print("Relay Temp Comp On:  ");
-    Serial.println(tempControl.getRelayTempCompOn());
-    Serial.print("Relay Temp Comp Off: ");
-    Serial.println(tempControl.getRelayTempCompOff());
-    #endif
     
     if(mqtt.getSynced())
     {
@@ -369,6 +343,29 @@ void loop()
     }
   }
 
+  ui.loop(now);
+
+  if(ui.getSettingsToSave())
+  {
+    ui.setSettingsToSave(false);
+    PutPreferences();
+    tempControl.getSensorData(now);
+    mqtt.publish(
+      mqttPublishTopics[5],
+      mqttOtherKeys[0], tempControl.getHeatingEnabled()
+    );
+  }
+
+  if(ui.getTempToPublish())
+  {
+    ui.setTempToPublish(false);
+    mqtt.publish(
+      mqttPublishTopics[ui.getRoomNumberToPublish()],
+      mqttTempSetKeys[ui.getRoomNumberToPublish()],
+      tempControl.getTempSet(ui.getRoomNumberToPublish())
+    );
+    
+  }
 }
 
 /*----------------------------------------------------------------------------
@@ -377,7 +374,8 @@ void loop()
 void GetPreferences()
 {
   preferences.begin("tempCtrl", false);
-  sht40.setTempCalibration(preferences.getFloat("sht40cal", 0));
+  sht40.setTempCalibration(preferences.getFloat("tempCal", 0));
+  sht40.setHumidityCalibration(preferences.getInt("humiCal", 0));
   tempControl.setTempControlSensMinus(preferences.getFloat("sensMinus", 0.3));
   tempControl.setTempControlSensPlus(preferences.getFloat("sensPlus", 0.3));
   tempControl.setTempControlIntervalMinutes(preferences.getInt("interval", 5));
@@ -390,7 +388,8 @@ void GetPreferences()
 void PutPreferences()
 {
   preferences.begin("tempCtrl", false);
-  preferences.putFloat("sht40cal", sht40.getTempCalibration());
+  preferences.putFloat("tempCal", sht40.getTempCalibration());
+  preferences.putInt("humiCal", sht40.getHumidityCalibration());
   preferences.putFloat("sensMinus", tempControl.getTempControlSensMinus());
   preferences.putFloat("sensPlus", tempControl.getTempControlSensPlus());
   preferences.putInt("interval", tempControl.getTempControlIntervalMinutes());
@@ -479,7 +478,7 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
           {
             if(!mqtt.getSynced())
               mqtt.setSynced();
-            tempControl.tempControl(millis());
+            tempControl.delayedTempControl(5000);
           }
           #ifdef DEBUG_MODE_MQTT
           String str = String(mqttTempSetKeys[i]) + " = " + tempControl.getTempSet(i);

@@ -8,6 +8,7 @@
 #include "MqttClass.h"
 #include "TempControlClass.h"
 
+//#define DEBUG_MODE
 
 class UIClass
 {
@@ -40,16 +41,24 @@ private:
     unsigned long _lastRefresh;
     unsigned long _refreshInterval;
 
-    bool _tempSetToPublish = false;
+    bool _tempSetChanged = false;
     unsigned long _tempSetToPublishTime;
     unsigned long _tempSetToPublishDelay = 1000;
     int _roomNumberToPublish;
     bool _tempSetReadyToPublish = false;
 
     bool _drawSettings;
-    int _settingsPages = 2;
+    int _settingsPages = 4;
     int _settingsCurrentPage;
     int _settingsCurrentRow;
+    int _settingsRowsPrePage[4] = {4, 3, 2, 1};
+    int _settingsArrowY[4][5] = {
+        {11, 31, 41, 51, -1},
+        {21, 41, 51, -1, -1},
+        {31, 51, -1, -1, -1},
+        {-1, -1, -1, -1, -1}
+    };
+    bool _settingToSave;
 
     void DrawActTime(int timeHH, int timeMM);
     inline String TimeFormater(int time) { return time<10 ? "0" + String(time) : String(time); };
@@ -79,9 +88,11 @@ public:
         int defaultRoom
     );
     ~UIClass();
-    
+    //Set clock time
     inline void setActTime(int timeHH, int timeMM) { _timeHH = timeHH; _timeMM = timeMM; }
+    //Set refresh time of loop()
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
+    //Main loop function
     void loop(unsigned long now);
 
     //Return TRUE when tempSet is waiting to publish
@@ -91,6 +102,12 @@ public:
     inline void setTempToPublish(bool publish) { _tempSetReadyToPublish = publish; }
     //Return room number to publish tempSet
     inline int getRoomNumberToPublish() { return _roomNumberToPublish; }
+
+    //Return TRUE when exiting settings menu
+    //setSettingsToSave(false) should be called after saving
+    inline bool getSettingsToSave() { return _settingToSave; }
+    //Set TRUE when settings should be saved
+    inline void setSettingsToSave(bool saveSettings) { _settingToSave = saveSettings; }
 };
 
 #endif

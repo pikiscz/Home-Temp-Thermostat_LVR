@@ -4,11 +4,15 @@
 #include <Arduino.h>
 #include "Sht40Class.h"
 
+//#define DEBUG_MODE
+
 class TempControlClass
 {
 private:
     Sht40Class* _sht40;
 
+    unsigned long _sensorInterval;
+    unsigned long _lastSensorData;
     unsigned long _tempControlInterval;
     unsigned long _lastTempControlEvent;
     int _tempSetMin;    //In degC multiplied by 10
@@ -41,12 +45,14 @@ private:
 public:
     TempControlClass(
         Sht40Class* sht40,
+        unsigned long sensorInterval,
         float tempSetMin,
         float tempSetMax,
         int defaultRoom
     );
     TempControlClass(
         Sht40Class* sht40,
+        unsigned long sensorInterval,
         float tempSetMin,
         float tempSetMax,
         int defaultRoom,
@@ -140,10 +146,11 @@ public:
 
     //Get SHT40 data
     void getSensorData(unsigned long now);
-    //Loop function
-    void loop(unsigned long now);
-    //Temperatur control
+    //Temperature control loop function
     void tempControl(unsigned long now);
+    //Set time to next temp control in milliseconds
+    inline void delayedTempControl(unsigned long delay) {
+        _lastTempControlEvent = millis() - _tempControlInterval + delay; }
 };
 
 #endif
