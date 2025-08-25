@@ -21,7 +21,7 @@ Load WiFi SSID & Pass and MQTT IP Address:
 */
 #include "networkCredentials.h"
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 //#define DEBUG_MODE_MQTT
 
 #define BAUDRATE 115200

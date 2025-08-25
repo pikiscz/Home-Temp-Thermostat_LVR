@@ -286,7 +286,7 @@ void UIClass::loop(unsigned long now) {
                     switch(_settingsCurrentRow)
                     {
                     case 0:
-                        _sht40->setTempCalibration(_sht40->getTempCalibration() - 0.1);
+                        _sht40->setTempCalibrationInt(_sht40->getTempCalibrationInt() - 1);
                         break;
 
                     case 1:
@@ -369,7 +369,7 @@ void UIClass::loop(unsigned long now) {
                     switch(_settingsCurrentRow)
                     {
                     case 0:
-                        _sht40->setTempCalibration(_sht40->getTempCalibration() + 0.1);
+                        _sht40->setTempCalibrationInt(_sht40->getTempCalibrationInt() + 1);
                         break;
 
                     case 1:
