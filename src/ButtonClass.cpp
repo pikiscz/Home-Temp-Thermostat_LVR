@@ -53,8 +53,10 @@ bool ButtonClass::isReleased()
         return false;
 }
 
-void ButtonClass::loop(unsigned long now)
+void ButtonClass::loop()
 {
+    unsigned long now = millis();
+    
     int currentState = digitalRead(_buttonPin);
 
     if(currentState != _lastFlickerableState)

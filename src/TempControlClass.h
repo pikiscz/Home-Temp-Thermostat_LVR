@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Sht40Class.h"
 
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 class TempControlClass
 {
@@ -145,12 +145,14 @@ public:
     inline void setSignalRC(int signalRC) { _signalRC = signalRC; }
 
     //Get SHT40 data
-    void getSensorData(unsigned long now);
+    void getSensorData();
+    //Get SHT40 data at set time in ms
+    void getSensorData(unsigned long time);
     //Temperature control loop function
-    void tempControl(unsigned long now);
-    //Set time to next temp control in milliseconds
-    inline void delayedTempControl(unsigned long delay) {
-        _lastTempControlEvent = millis() - _tempControlInterval + delay; }
+    void tempControl();
+    //Temperature control loop function
+    //Next iterations at set time in ms
+    void tempControl(unsigned long time);
 };
 
 #endif

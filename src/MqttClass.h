@@ -57,7 +57,7 @@ public:
     //Return TRUE when succesfully connected, othewise return FALSE
     bool reconnect();
     //Loop funciton checks for connection status and incomming messages
-    void loop(unsigned long now);
+    void loop();
     //Return TRUE when connected to MQTT server
     inline bool getConnected() { return _connected; }
     //Return synchornizetion status

@@ -40,16 +40,15 @@ int Sht40Class::getHumidity()
     return _humidityInt;
 }
 
-float Sht40Class::getTemperature()
-{
-    _temperatureInt = (10 * _temperature.temperature) + _tempCalibrationInt;
-    
-    return float(_temperatureInt) / 10;
-}
-
 int Sht40Class::getTemperatureInt()
 {
     _temperatureInt = (10 * _temperature.temperature) + _tempCalibrationInt;
 
     return _temperatureInt;
 }
+
+float Sht40Class::getTemperature()
+{
+    return float(getTemperatureInt()) / 10;
+}
+

@@ -66,7 +66,7 @@ public:
     //Reset press/release counter to 0
     inline void resetCount() { _count = 0; }
     //Loop function
-    void loop(unsigned long now);
+    void loop();
 };
 
 #endif

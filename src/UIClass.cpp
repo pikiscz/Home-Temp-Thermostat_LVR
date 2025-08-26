@@ -206,7 +206,10 @@ void UIClass::DrawSettings()
     _display->display();
 }
 
-void UIClass::loop(unsigned long now) {
+void UIClass::loop()
+{
+    unsigned long now = millis();
+    
     if(_buttonMinus->isPressed())
     {
         if(_display->getDisplayOn())
@@ -299,7 +302,7 @@ void UIClass::loop(unsigned long now) {
                 }
             }
         }
-        _display->resetSleepTimer(now);
+        _display->resetSleepTimer();
     }
 
     if(_buttonPlus->isPressed())
@@ -382,7 +385,7 @@ void UIClass::loop(unsigned long now) {
                 }
             }
         }
-        _display->resetSleepTimer(now);
+        _display->resetSleepTimer();
     }
 
     if(_buttonEnter->isPressed())
@@ -416,7 +419,7 @@ void UIClass::loop(unsigned long now) {
                 }               
             }
         }
-        _display->resetSleepTimer(now);
+        _display->resetSleepTimer();
     }
     
     if(_tempSetChanged)
@@ -427,7 +430,7 @@ void UIClass::loop(unsigned long now) {
             _tempSetReadyToPublish = true;
 
             if(_roomNumberToPublish == _defaultRoom)
-                _tempControl->delayedTempControl(1000);
+                _tempControl->tempControl(1000);
         }
     }
 

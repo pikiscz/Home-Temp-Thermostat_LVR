@@ -93,7 +93,7 @@ public:
     //Set refresh time of loop()
     inline void setRefreshInterval(unsigned long refreshInterval) { _refreshInterval = refreshInterval; }
     //Main loop function
-    void loop(unsigned long now);
+    void loop();
 
     //Return TRUE when tempSet is waiting to publish
     //setTempToPublish(false) should be called after publishing

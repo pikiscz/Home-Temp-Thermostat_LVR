@@ -20,10 +20,7 @@ MqttClass::MqttClass(
     _client.setCallback(mqttCallback);
 }
 
-MqttClass::~MqttClass()
-{
-
-}
+MqttClass::~MqttClass() {}
 
 void MqttClass::setCallback(std::function<void(char*, uint8_t*, unsigned int)> mqttCallback)
 {
@@ -100,8 +97,9 @@ bool MqttClass::reconnect()
     return _connected;
 }
 
-void MqttClass::loop(unsigned long now)
+void MqttClass::loop()
 {
+    unsigned long now = millis();
     if(!_client.connected())
     {
         if(now - _reconnectLastEvent > _reconnectInterval)

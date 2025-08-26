@@ -26,8 +26,10 @@ void OledDisplayClass::init()
     init(0);
 }
 
-void OledDisplayClass::sleepTimer(unsigned long now)
+void OledDisplayClass::sleepTimer()
 {
+    unsigned long now = millis();
+
     if(_displayIsOn && _sleepTimeOut > 0)
     {
         if(now - _displayOnTimer > _sleepTimeOut)
@@ -35,9 +37,10 @@ void OledDisplayClass::sleepTimer(unsigned long now)
     }
 }
 
-void OledDisplayClass::resetSleepTimer(unsigned long now)
+void OledDisplayClass::resetSleepTimer()
 {
-    _displayOnTimer = now;
+    _displayOnTimer = millis();
+    
     if(!_displayIsOn)
         setDisplayOn();
 }

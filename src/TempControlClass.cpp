@@ -33,8 +33,10 @@ TempControlClass::TempControlClass(
 
 TempControlClass::~TempControlClass() {}
 
-void TempControlClass::getSensorData(unsigned long now)
+void TempControlClass::getSensorData()
 {
+    unsigned long now = millis();
+
     if(now - _lastSensorData > _sensorInterval)
     {
         _lastSensorData = now;
@@ -76,8 +78,16 @@ void TempControlClass::getSensorData(unsigned long now)
     }
 }
 
-void TempControlClass::tempControl(unsigned long now)
+void TempControlClass::getSensorData(unsigned long time)
 {
+    _lastSensorData = millis() - _sensorInterval + time;
+    getSensorData();
+}
+
+void TempControlClass::tempControl()
+{
+    unsigned long now = millis();
+
     if(now - _lastTempControlEvent > _tempControlInterval)
     {
         _lastTempControlEvent = now;
@@ -121,4 +131,10 @@ void TempControlClass::tempControl(unsigned long now)
         Serial.println(getRelays(_defaultRoom));
         #endif
     } 
+}
+
+void TempControlClass::tempControl(unsigned long time)
+{
+    _lastTempControlEvent = millis() - _tempControlInterval + time;
+    tempControl();
 }

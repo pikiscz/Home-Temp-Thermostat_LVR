@@ -21,7 +21,7 @@ Load WiFi SSID & Pass and MQTT IP Address:
 */
 #include "networkCredentials.h"
 
-//#define DEBUG_MODE
+#define DEBUG_MODE
 //#define DEBUG_MODE_MQTT
 
 #define BAUDRATE 115200
@@ -69,7 +69,7 @@ const char* roomNames[] = {
   "Venkovni"
 };
 const int roomsCount = 5;
-const int defaultRoom = 1;  // WORK ROOM
+const int defaultRoom = 1;  // LIVING ROOM
 
 const char* mqttPublishTopics[] = {
   "/home/temp/therm_LVR_in",
@@ -293,7 +293,7 @@ void setup()
   display.display();
   
   ui.setRefreshInterval(uiRefreshIneterval);
-  tempControl.delayedTempControl(2000);
+  tempControl.tempControl(2000);
   mqttLastEvent = millis() - mqttInterval + 2000; //2 seconds to call mqtt publish
   
   delay(2000);
@@ -304,20 +304,19 @@ void setup()
 ==============================================================================*/
 void loop()
 {
-  unsigned long now = millis();
+  buttonMinus.loop();
+  buttonPlus.loop();
+  buttonEnter.loop();
 
-  buttonMinus.loop(now);
-  buttonPlus.loop(now);
-  buttonEnter.loop(now);
+  display.sleepTimer();
 
-  display.sleepTimer(now);
-
-  tempControl.getSensorData(now);
+  tempControl.getSensorData();
   
-  tempControl.tempControl(now);
+  tempControl.tempControl();
 
-  mqtt.loop(now);
+  mqtt.loop();
 
+  unsigned long now = millis();
   if(now - mqttLastEvent > mqttInterval)
   {
     mqttLastEvent = now;
@@ -343,13 +342,15 @@ void loop()
     }
   }
 
-  ui.loop(now);
+  ui.loop();
 
   if(ui.getSettingsToSave())
   {
     ui.setSettingsToSave(false);
     PutPreferences();
-    tempControl.getSensorData(now);
+    tempControl.getSensorData(0);
+    tempControl.tempControl(0);
+    mqttLastEvent = millis() - mqttInterval;
     mqtt.publish(
       mqttPublishTopics[5],
       mqttOtherKeys[0], tempControl.getHeatingEnabled()
@@ -478,7 +479,7 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
           {
             if(!mqtt.getSynced())
               mqtt.setSynced();
-            tempControl.delayedTempControl(5000);
+            tempControl.tempControl(5000);
           }
           #ifdef DEBUG_MODE_MQTT
           String str = String(mqttTempSetKeys[i]) + " = " + tempControl.getTempSet(i);
