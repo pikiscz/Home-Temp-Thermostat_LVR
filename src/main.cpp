@@ -69,7 +69,7 @@ const char* roomNames[] = {
   "Venkovni"
 };
 const int roomsCount = 5;
-const int defaultRoom = 1;  // LIVING ROOM
+const int defaultRoom = 0;  // LIVING ROOM
 
 const char* mqttPublishTopics[] = {
   "/home/temp/therm_LVR_in",
