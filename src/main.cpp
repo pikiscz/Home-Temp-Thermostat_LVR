@@ -21,7 +21,7 @@ Load WiFi SSID & Pass and MQTT IP Address:
 */
 #include "networkCredentials.h"
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 //#define DEBUG_MODE_MQTT
 
 #define BAUDRATE 115200
@@ -375,14 +375,14 @@ void loop()
 void GetPreferences()
 {
   preferences.begin("tempCtrl", false);
-  sht40.setTempCalibration(preferences.getFloat("tempCal", 0));
+  sht40.setTempCalibration(preferences.getFloat("tempCal", -3));
   sht40.setHumidityCalibration(preferences.getInt("humiCal", 0));
-  tempControl.setTempControlSensMinus(preferences.getFloat("sensMinus", 0.3));
-  tempControl.setTempControlSensPlus(preferences.getFloat("sensPlus", 0.3));
+  tempControl.setTempControlSensMinus(preferences.getFloat("sensMinus", 0.2));
+  tempControl.setTempControlSensPlus(preferences.getFloat("sensPlus", 0.2));
   tempControl.setTempControlIntervalMinutes(preferences.getInt("interval", 5));
   tempControl.setTempControlDifference(preferences.getFloat("tempDiff", 0.5));
-  tempControl.setRelayTempCoefOn(preferences.getFloat("tCoefOn", 0.6));
-  tempControl.setRelayTempCoefOff(preferences.getFloat("tCoefOff", 0.4));
+  tempControl.setRelayTempCoefOn(preferences.getFloat("tCoefOn", 0.62));
+  tempControl.setRelayTempCoefOff(preferences.getFloat("tCoefOff", 0.38));
   preferences.end();
 }
 
