@@ -27,8 +27,9 @@ TempControlClass::TempControlClass(
     _defaultRoom = defaultRoom;
     _tempSet[_defaultRoom] = _tempSetMin;
 
-    if(relayPin >= 0)
-        pinMode(relayPin, OUTPUT);
+    _relayPin = relayPin;
+    if(_relayPin >= 0)
+        pinMode(_relayPin, OUTPUT);
 }
 
 TempControlClass::~TempControlClass() {}
@@ -45,21 +46,24 @@ void TempControlClass::getSensorData()
         _humidity[_defaultRoom] = _sht40->getHumidity();
         _tempAct[_defaultRoom] = _sht40->getTemperatureInt();
 
-        if(_relays[_defaultRoom] == 1)
+        if(_relayPin >= 0)
         {
-            if(_relayTempCompOn <= 20)
+            if(_relays[_defaultRoom] == 1)
             {
-                int seconds = (now - _relayTimeOn) / 1000;
-                _relayTempCompOn = _relayTempCompOff + (seconds * _relayTempCoefOn / 10000);
+                if(_relayTempCompOn <= 20)
+                {
+                    int seconds = (now - _relayTimeOn) / 1000;
+                    _relayTempCompOn = _relayTempCompOff + (seconds * _relayTempCoefOn / 10000);
+                }
+                _tempAct[_defaultRoom] -= _relayTempCompOn;
             }
-            _tempAct[_defaultRoom] -= _relayTempCompOn;
-        }
 
-        if(_relays[_defaultRoom] == 0 && _relayTempCompOff > 0)
-        {
-            int seconds = (now - _relayTimeOff) / 1000;
-            _relayTempCompOff = _relayTempCompOn - (seconds * _relayTempCoefOff / 10000);
-            _tempAct[_defaultRoom] -= _relayTempCompOff;
+            if(_relays[_defaultRoom] == 0 && _relayTempCompOff > 0)
+            {
+                int seconds = (now - _relayTimeOff) / 1000;
+                _relayTempCompOff = _relayTempCompOn - (seconds * _relayTempCoefOff / 10000);
+                _tempAct[_defaultRoom] -= _relayTempCompOff;
+            }
         }
 
         #ifdef DEBUG_MODE
@@ -99,10 +103,13 @@ void TempControlClass::tempControl()
             {
                 if(_relays[_defaultRoom] == 0)
                 {
-                    digitalWrite(_relayPin, HIGH);
                     _relays[_defaultRoom] = 1;
-                    _relayTimeOn = now;
-                    _relayTempCompOn = _relayTempCompOff;
+                    if(_relayPin >= 0)
+                    {
+                        digitalWrite(_relayPin, HIGH);
+                        _relayTimeOn = now;
+                        _relayTempCompOn = _relayTempCompOff;
+                    }
                 }
             }
         }
@@ -111,10 +118,13 @@ void TempControlClass::tempControl()
         {
             if(_relays[_defaultRoom] == 1)
             {
-                digitalWrite(_relayPin, LOW);
                 _relays[_defaultRoom] = 0;
-                _relayTimeOff = now;
-                _relayTempCompOff = _relayTempCompOn;
+                if(_relayPin >= 0)
+                {
+                    digitalWrite(_relayPin, LOW);
+                    _relayTimeOff = now;
+                    _relayTempCompOff = _relayTempCompOn;
+                }
             }
         }
         _previousTemp2 = _previousTemp1;
