@@ -29,8 +29,8 @@ private:
     unsigned long _relayTimeOff;
     int _relayTempCompOn;   //In degC multiplied by 10
     int _relayTempCompOff;  //In degC multiplied by 10
-    float _relayTempCoefOn;   // 100* INT(10*degC)/minute
-    float _relayTempCoefOff;  // 100* INT(10*degC)/minute
+    float _relayTempCoefOn;   // 100* INT(10*degC)/seconds
+    float _relayTempCoefOff;  // 100* INT(10*degC)/seconds
 
     int _humidity[5];
     int _tempAct[5];  //In degC multiplied by 10
@@ -79,12 +79,12 @@ public:
     //it is assumed that windows are open so relay is not allowed to switch on
     inline void setTempControlDifference(float tempDiff) { _tempDifference = tempDiff * 10; }
 
-    //Return temperature compensation coeficient of relay when is switched on
+    //Return temperature compensation coefficient of relay when is switched on
     inline float getRelayTempCoefOn() { return float(_relayTempCoefOn) / 100; }
     //Set temperature compensation coeficient of relay when is switched on
     inline void setRelayTempCoefOn(float tempCoef) { _relayTempCoefOn = tempCoef * 100; }
 
-    //Return temperature compensation coeficient of relay when is switched off
+    //Return temperature compensation coefficient of relay when is switched off
     inline float getRelayTempCoefOff() { return float(_relayTempCoefOff) / 100; }
     //Set temperature compensation coeficient of relay when is switched off
     inline void setRelayTempCoefOff(float tempCoef) { _relayTempCoefOff = tempCoef * 100; }
