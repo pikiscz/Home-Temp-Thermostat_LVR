@@ -119,7 +119,7 @@ const char* mqttRelayKeys[] = {
   "relay_WKR",
   "relay_BDR",
   "relay_BHR",
-  "rekat_OUT"
+  "relay_OUT"
 };
 const char* mqttOtherKeys[] = {
   "heating_enabled",
@@ -412,7 +412,8 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
 
   String json;
 
-  for(int i = 0; i < length; i++) {
+  for(int i = 0; i < length; i++)
+  {
     json += (char)message[i];
     #ifdef DEBUG_MODE_MQTT
     Serial.print((char)message[i]);
@@ -425,7 +426,8 @@ void MqttCallback(char* topic, byte* message, unsigned long length)
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, json);
 
-  if(error) {
+  if(error)
+  {
     #ifdef DEBUG_MODE_MQTT
     Serial.println();
     Serial.println("Json deserialization failed:");
