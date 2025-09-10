@@ -40,8 +40,6 @@ Load WiFi SSID & Pass and MQTT IP Address:
 
 unsigned long mqttLastEvent;
 unsigned long mqttInterval = 60000; //ms
-unsigned long reconnectInterval = 5000; //ms
-unsigned long mqttToPublishDelay = 1000; //ms
 
 unsigned long displaySleepTimeOut = 60000; //ms
 unsigned long uiRefreshIneterval = 100; //ms
